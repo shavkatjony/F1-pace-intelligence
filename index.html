@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Team DPEC Pit Wall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* Layout: a 1970s race-programme pit wall. Racing-stripe header, a ticket-style event card,
+   and a 12-column grid of linked "windows", each with its own livery colour. */
+:root{
+  --paper:#F1E7D2; --panel:#FBF4E4; --panel2:#F4E9D1; --ink:#2B2433; --muted:#6E6272;
+  --line:#D6C7A6; --line-strong:#A9977A; --shadow:#C9B48E;
+  --orange:#D7612E; --mustard:#D99A1E; --teal:#2C7C77; --blue:#3A5BA0; --plum:#8C3F6E;
+  --olive:#71812F; --red:#BE3B2B; --brown:#8A5A36; --sky:#4C93BE; --rose:#CC6F86;
+  --s1:var(--orange); --s2:var(--blue);
+  --soft:#C2412D; --med:#D99A1E; --hard:#8F8678;
+  --f-display:"Bungee","Impact","Arial Black",sans-serif;
+  --f-label:"Barlow Condensed","Arial Narrow","Helvetica Neue",sans-serif;
+  --f-body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Courier Prime","Courier New",ui-monospace,monospace;
+  --row:118px; --gap:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#1D1A24; --panel:#26222F; --panel2:#2E2939; --ink:#EFE5CF; --muted:#A99DAA;
+  --line:#3E384A; --line-strong:#5A5266; --shadow:#100E15;
+  --orange:#E77B4B; --mustard:#E7B44A; --teal:#4FA59D; --blue:#7491D6; --plum:#BC72A0;
+  --olive:#A2B25A; --red:#E06A55; --brown:#C08B62; --sky:#7DB9DC; --rose:#E294A8;
+  --soft:#E06A55; --med:#E7B44A; --hard:#CFC6B4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1D1A24; --panel:#26222F; --panel2:#2E2939; --ink:#EFE5CF; --muted:#A99DAA;
+  --line:#3E384A; --line-strong:#5A5266; --shadow:#100E15;
+  --orange:#E77B4B; --mustard:#E7B44A; --teal:#4FA59D; --blue:#7491D6; --plum:#BC72A0;
+  --olive:#A2B25A; --red:#E06A55; --brown:#C08B62; --sky:#7DB9DC; --rose:#E294A8;
+  --soft:#E06A55; --med:#E7B44A; --hard:#CFC6B4; color-scheme:dark}
+:root.cb{--s1:#E69F00; --s2:#3E8EDE}
+:root.compact{--row:96px; --gap:8px}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--paper)}
+body{color:var(--ink);font:15px/1.45 var(--f-body);margin:0;
+  background-image:radial-gradient(color-mix(in srgb,var(--ink) 7%,transparent) .6px,transparent .8px);
+  background-size:5px 5px}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--mustard);outline-offset:2px}
+
+.stripes{height:12px;background:linear-gradient(var(--orange) 0 25%,var(--mustard) 25% 50%,var(--teal) 50% 75%,var(--blue) 75%)}
+.wrap{padding-inline:16px;padding-block:14px 28px;max-width:1800px;margin:0 auto}
+
+/* ---------- top bar ---------- */
+.top{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+.logo{font:400 34px/1 var(--f-display);letter-spacing:.02em;color:var(--ink);
+  text-shadow:3px 3px 0 var(--mustard),6px 6px 0 var(--orange)}
+.brand small{font:600 13px/1 var(--f-label);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+
+.ticket{display:flex;align-items:stretch;background:var(--panel);border:1.5px solid var(--line-strong);border-radius:8px;
+  box-shadow:3px 3px 0 var(--shadow);overflow:hidden;min-width:0}
+.ticket .rd{background:var(--teal);color:var(--panel);display:grid;place-items:center;padding:6px 14px;
+  font:400 13px/1 var(--f-display);text-align:center;border-right:2px dashed var(--panel)}
+.ticket .rd b{display:block;font-size:26px;font-weight:400}
+.ticket .ev{padding:6px 14px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.ticket .ev strong{font:700 18px/1.1 var(--f-label);letter-spacing:.06em;text-transform:uppercase}
+.ticket .ev span{font:13px/1.3 var(--f-mono);color:var(--muted)}
+.ticket svg{width:62px;height:auto;margin:6px 10px 6px 0;flex:none}
+
+.ctxbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-left:auto}
+.field{display:flex;align-items:center;gap:6px}
+.field>span{font:600 12px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+
+/* ---------- buttons: ticket stubs with an inner rule ---------- */
+.btn{--bg:var(--panel);--fg:var(--ink);background:var(--bg);color:var(--fg);border:1.5px solid var(--line-strong);
+  border-radius:6px;padding:7px 14px;font:700 14px/1 var(--f-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  box-shadow:inset 0 0 0 2px var(--bg),inset 0 0 0 3px color-mix(in srgb,var(--line-strong) 55%,transparent),2px 2px 0 var(--shadow);
+  -webkit-mask:radial-gradient(circle 5px at 0 50%,#0000 96%,#000) left/51% 100% no-repeat,radial-gradient(circle 5px at 100% 50%,#0000 96%,#000) right/51% 100% no-repeat;
+  mask:radial-gradient(circle 5px at 0 50%,#0000 96%,#000) left/51% 100% no-repeat,radial-gradient(circle 5px at 100% 50%,#0000 96%,#000) right/51% 100% no-repeat;
+  transition:transform .08s,background .15s}
+.btn:hover{--bg:var(--panel2)}
+.btn:active{transform:translate(1px,1px)}
+.btn.go{--bg:var(--mustard);--fg:#2B2433;border-color:color-mix(in srgb,var(--mustard) 60%,#2B2433)}
+.btn.go:hover{--bg:color-mix(in srgb,var(--mustard) 85%,var(--panel))}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+select.btn{padding-right:26px;appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 52%,calc(100% - 8px) 52%;background-size:5px 5px;background-repeat:no-repeat;background-color:var(--bg)}
+
+.seg{display:inline-flex;border:1.5px solid var(--line-strong);border-radius:999px;padding:2px;background:var(--panel);gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:999px;padding:5px 11px;cursor:pointer;
+  font:700 13px/1 var(--f-label);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.seg button:hover{color:var(--ink);background:var(--panel2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg.c-teal button[aria-pressed="true"]{background:var(--teal);color:var(--panel)}
+.seg.c-plum button[aria-pressed="true"]{background:var(--plum);color:var(--panel)}
+
+.layoutbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:18px 0 12px;padding:10px 12px;
+  border-block:3px double var(--line-strong)}
+.layoutbar .lbl{font:600 12px/1 var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.layoutbar .hint{font:13px var(--f-mono);color:var(--muted)}
+.spacer{flex:1}
+.mode{display:flex;align-items:center;gap:8px}
+.localacts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- workspace ---------- */
+.ws{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-rows:var(--row);gap:var(--gap);grid-auto-flow:dense}
+.win{grid-column:span var(--cs);grid-row:span var(--rs);display:flex;flex-direction:column;min-width:0;min-height:0;
+  background:var(--panel);border:1.5px solid var(--line-strong);border-top:5px solid var(--wc);border-radius:10px;
+  box-shadow:3px 3px 0 var(--shadow);overflow:hidden}
+.win.dragover{outline:3px dashed var(--wc);outline-offset:3px}
+.win-h{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 10px;background:var(--panel2);border-bottom:1px solid var(--line);cursor:grab;min-width:0}
+.win-h .tri{width:26px;height:14px;flex:none;
+  background:linear-gradient(90deg,var(--wc) 0 28%,transparent 28% 36%,color-mix(in srgb,var(--wc) 65%,var(--panel2)) 36% 64%,transparent 64% 72%,color-mix(in srgb,var(--wc) 35%,var(--panel2)) 72%);
+  transform:skewX(-20deg)}
+.win-h h3{margin:0;flex:0 0 auto;max-width:calc(100% - 170px);font:700 15px/1.1 var(--f-label);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win-h .mart{flex:1 1 0;font:12px var(--f-mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.win-h .tools{margin-left:auto;display:flex;gap:2px;flex:none}
+.ic{width:26px;height:26px;border:0;border-radius:6px;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.ic:hover{background:var(--panel);color:var(--ink)}
+.ic svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic.on{color:var(--wc)}
+.pinned-badge{font:700 11px/1 var(--f-label);letter-spacing:.1em;text-transform:uppercase;background:var(--wc);color:var(--panel);padding:3px 6px;border-radius:4px}
+.win-tb{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 10px;border-bottom:1px dashed var(--line);font:13px var(--f-mono);color:var(--muted);min-height:36px}
+.win-tb:empty{display:none}
+.win-b{flex:1;min-height:0;position:relative;overflow:auto}
+.win-b.chart{overflow:hidden}
+.win-b svg.ch{display:block}
+
+/* tabs mode (laptop preset) */
+.tabstrip{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabstrip button{border:1.5px solid var(--line-strong);border-bottom-width:4px;border-bottom-color:var(--wc);background:var(--panel);
+  border-radius:8px 8px 3px 3px;padding:6px 10px;font:700 13px/1 var(--f-label);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
+.tabstrip button[aria-selected="true"]{background:var(--wc);color:var(--panel);border-color:var(--wc)}
+
+/* svg chart text */
+.ch text{font:11px var(--f-mono);fill:var(--muted)}
+.ch .lab{font:600 11.5px var(--f-label);letter-spacing:.12em;text-transform:uppercase;fill:var(--muted)}
+.ch .val{fill:var(--ink);font-weight:700}
+.ch .grid{stroke:var(--line);stroke-width:1}
+.ch .axis{stroke:var(--line-strong);stroke-width:1.2}
+.ch .cursor{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:3 3}
+.ch .corner{stroke:var(--line);stroke-dasharray:2 4}
+
+/* tables */
+table.tt{width:100%;border-collapse:collapse;font:13.5px var(--f-mono);font-variant-numeric:tabular-nums}
+.tt th{position:sticky;top:0;background:var(--panel);text-align:left;font:600 12px/1 var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  padding:8px 8px;border-bottom:2px solid var(--line-strong);z-index:1}
+.tt td{padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tt td.num,.tt th.num{text-align:right}
+.tt tr.click{cursor:pointer}
+.tt tr.click:hover td{background:var(--panel2)}
+.tt tr.p1 td:first-child{box-shadow:inset 4px 0 0 var(--s1)}
+.tt tr.p2 td:first-child{box-shadow:inset 4px 0 0 var(--s2)}
+.tt tr.hl td{background:color-mix(in srgb,var(--mustard) 18%,transparent)}
+.drv{font-weight:700;color:var(--ink)}
+.teamchip{display:inline-block;width:5px;height:16px;border-radius:2px;vertical-align:-3px;margin-right:6px}
+.tyre{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:3px solid var(--c);font:700 10px/1 var(--f-label);color:var(--ink)}
+.ours{font:700 10.5px/1 var(--f-label);letter-spacing:.1em;color:var(--orange);margin-left:4px}
+.vs{border:1px solid var(--line-strong);background:transparent;border-radius:4px;font:700 11px/1 var(--f-label);padding:3px 5px;cursor:pointer;color:var(--muted);letter-spacing:.06em}
+.vs:hover{border-color:var(--s2);color:var(--s2)}
+.pos{color:var(--good,var(--teal));font-weight:700}
+.neg{color:var(--red);font-weight:700}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;padding:10px}
+.kpi{border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel2);min-width:0}
+.kpi .k{font:600 11.5px/1.2 var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font:700 24px/1.15 var(--f-mono);font-variant-numeric:tabular-nums}
+.kpi .s{font:12.5px/1.3 var(--f-body);color:var(--muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--c,var(--line-strong));border-radius:999px;padding:3px 10px;
+  font:600 12.5px/1.2 var(--f-label);letter-spacing:.06em;text-transform:uppercase;background:color-mix(in srgb,var(--c,var(--line)) 12%,var(--panel))}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.legend i{display:inline-block;width:16px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+.stamp{display:inline-block;border:2.5px solid var(--red);color:var(--red);border-radius:6px;padding:4px 10px;transform:rotate(-3deg);
+  font:700 12.5px/1.25 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;background:color-mix(in srgb,var(--red) 6%,transparent)}
+.note{font:13px/1.45 var(--f-mono);color:var(--muted)}
+.pad{padding:10px 12px}
+.typed{font:14px/1.6 var(--f-mono);max-width:62ch}
+.typed b{background:color-mix(in srgb,var(--mustard) 30%,transparent);padding:0 3px}
+
+/* chat as pit-radio transcript */
+.radio{display:flex;flex-direction:column;height:100%}
+.log{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px;
+  background:repeating-linear-gradient(var(--panel) 0 26px,color-mix(in srgb,var(--line) 55%,var(--panel)) 26px 27px)}
+.msg{max-width:92%;font:14px/1.5 var(--f-mono)}
+.msg .who{font:700 11.5px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;display:flex;gap:6px;align-items:center;margin-bottom:3px}
+.msg.me{align-self:flex-end;text-align:right}
+.msg.me .who{justify-content:flex-end;color:var(--blue)}
+.msg.ai .who{color:var(--plum)}
+.msg .bubble{display:inline-block;text-align:left;padding:7px 11px;border-radius:8px;border:1.5px solid var(--line-strong);background:var(--panel2)}
+.msg.ai .bubble{border-left:5px solid var(--plum)}
+.msg.me .bubble{border-right:5px solid var(--blue)}
+.route{font:700 10.5px/1 var(--f-label);letter-spacing:.08em;padding:3px 6px;border-radius:4px;background:var(--plum);color:var(--panel)}
+.route.st{background:var(--teal)}
+.route.np{background:var(--red)}
+.ask{display:flex;gap:8px;padding:8px 10px;border-top:1px solid var(--line)}
+.ask input{flex:1;min-width:0;border:1.5px solid var(--line-strong);border-radius:6px;background:var(--panel);padding:7px 10px;font:14px var(--f-mono)}
+.sugg{display:flex;gap:6px;flex-wrap:wrap;padding:6px 10px 0}
+.sugg button{border:1px dashed var(--plum);background:transparent;color:var(--plum);border-radius:999px;padding:3px 9px;font:600 12px/1.2 var(--f-label);letter-spacing:.04em;cursor:pointer}
+
+/* drawers, menus, toast */
+.drawer{position:fixed;inset:0 0 0 auto;width:min(380px,100%);background:var(--panel);border-left:2px solid var(--line-strong);
+  box-shadow:-6px 0 0 var(--shadow);padding:calc(18px + env(safe-area-inset-top,0px)) 18px 18px;overflow:auto;z-index:50;display:flex;flex-direction:column;gap:16px}
+.drawer h2{margin:0;font:400 22px/1 var(--f-display);color:var(--ink);text-shadow:2px 2px 0 var(--mustard)}
+.drawer .row{display:flex;flex-direction:column;gap:6px}
+.drawer .row>span{font:600 12px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.drawer p{margin:0;font:13px/1.45 var(--f-mono);color:var(--muted)}
+.menu{position:fixed;z-index:60;background:var(--panel);border:1.5px solid var(--line-strong);border-radius:10px;box-shadow:4px 4px 0 var(--shadow);
+  padding:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;width:min(440px,calc(100vw - 32px))}
+.menu button{display:flex;gap:8px;align-items:center;text-align:left;border:0;background:transparent;border-radius:6px;padding:7px 8px;cursor:pointer;
+  font:600 14px/1.15 var(--f-label);letter-spacing:.05em;text-transform:uppercase}
+.menu button:hover{background:var(--panel2)}
+.menu button i{width:12px;height:12px;border-radius:3px;background:var(--wc);flex:none}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;max-width:min(560px,calc(100vw - 32px));
+  background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:8px;font:13.5px/1.4 var(--f-mono);box-shadow:3px 3px 0 var(--mustard)}
+
+footer{margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font:13px var(--f-mono);color:var(--muted)}
+.sample{font:700 12px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;background:var(--red);color:var(--panel);padding:5px 8px;border-radius:4px}
+
+/* solo pop-out mode */
+body.solo .top,body.solo .layoutbar,body.solo footer{display:none}
+body.solo .ws{grid-auto-rows:calc((100vh - 70px)/5)}
+
+@media (max-width:1100px){.ctxbar{margin-left:0}}
+@media (max-width:860px){
+  .ws{grid-template-columns:minmax(0,1fr)}
+  .win{grid-column:1/-1}
+  .logo{font-size:28px}
+  .win-h .mart,.ic[data-act="wide"],.ic[data-act="tall"]{display:none}
+  .win-h h3{max-width:none;flex:1 1 auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="stripes" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="logo">TEAM DPEC</span>
+      <small>Pit wall · Weekend forecaster</small>
+    </div>
+    <div class="ticket" title="Race programme">
+      <div class="rd">RD<b>18</b></div>
+      <div class="ev"><strong>Sample Grand Prix</strong><span>Circuit de Exemplo · 5.214 km · 57 laps</span><span>17–19 Oct 2026</span></div>
+      <svg id="miniTrack" viewBox="0 0 100 70" aria-hidden="true"></svg>
+    </div>
+    <div class="ctxbar">
+      <div class="field"><span>Session</span><div class="seg" id="sessSeg"></div></div>
+      <div class="field"><span class="dot" style="background:var(--s1)"></span><span>Driver</span><select class="btn sm" id="selP" aria-label="Primary driver"></select></div>
+      <div class="field"><span class="dot" style="background:var(--s2)"></span><span>Compare</span><select class="btn sm" id="selC" aria-label="Compare driver"></select></div>
+      <button class="btn sm" id="btnSettings">Settings</button>
+    </div>
+  </header>
+
+  <nav class="layoutbar" aria-label="Layout">
+    <span class="lbl">Layout</span>
+    <div class="seg c-teal" id="presetSeg"></div>
+    <span class="lbl" id="monLbl">Monitor</span>
+    <div class="seg c-plum" id="monSeg"></div>
+    <button class="btn sm" id="btnPopMon" title="Open this monitor's windows in a new browser window">Open on another screen</button>
+    <span class="spacer"></span>
+    <div class="mode"><span class="lbl">Mode</span><div class="seg" id="modeSeg"></div></div>
+    <div class="localacts" id="localActs"></div>
+    <button class="btn sm go" id="btnAdd">+ Add window</button>
+    <button class="btn sm" id="btnReset">Reset layout</button>
+  </nav>
+
+  <div class="tabstrip" id="tabstrip" hidden></div>
+  <main class="ws" id="ws"></main>
+
+  <footer>
+    <span class="sample">Sample data</span>
+    <span>Look-and-feel prototype. Every number is made up. Teams, drivers and circuit are fictional.</span>
+    <span>Drag a window's title bar onto another to swap them. Hover any trace or the track map to move the shared cursor.</span>
+  </footer>
+</div>
+
+<aside class="drawer" id="drawer" hidden aria-label="Settings">
+  <div style="display:flex;align-items:center;justify-content:space-between"><h2>Settings</h2><button class="btn sm" id="btnClose">Close</button></div>
+  <div class="row"><span>Theme</span><div class="seg" id="themeSeg"></div><p>Day session is cream paper and ink. Night session is warm charcoal with amber.</p></div>
+  <div class="row"><span>Speed units</span><div class="seg" id="unitSeg"></div></div>
+  <div class="row"><span>Density</span><div class="seg" id="densSeg"></div></div>
+  <div class="row"><span>Colour-blind safe driver colours</span><div class="seg" id="cbSeg"></div></div>
+  <div class="row"><span>Adopted real team (decision D2)</span><select class="btn" id="selTeam" disabled><option>Not chosen yet</option></select><p>One config value in the real app. DPEC's two cars become "our cars"; everyone else is a rival.</p></div>
+  <div class="row"><span>Layouts</span><p>Each preset remembers your changes in this browser. In the full app the layout saves to a file you can carry to another machine.</p></div>
+</aside>
+<div class="menu" id="addMenu" hidden role="menu"></div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(()=>{
+"use strict";
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function rng(seed){let s=(seed*2654435761)>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296}}
+function gauss(r){return Math.sqrt(-2*Math.log(r()+1e-9))*Math.cos(2*Math.PI*r())}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtLap=s=>{const m=Math.floor(s/60);return m+":"+(s-m*60).toFixed(3).padStart(6,"0")};
+const sgn=v=>(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(3);
+
+/* ================= sample world ================= */
+const TEAMS=[
+ {id:"dpec",name:"Team DPEC",c:"var(--orange)",perf:-.004},
+ {id:"fal",name:"Falcon",c:"var(--blue)",perf:0},
+ {id:"mer",name:"Meridian",c:"var(--teal)",perf:-.002},
+ {id:"vor",name:"Vortex",c:"var(--plum)",perf:-.008},
+ {id:"kes",name:"Kestrel",c:"var(--olive)",perf:-.012},
+ {id:"ori",name:"Orion",c:"var(--sky)",perf:-.015},
+ {id:"hal",name:"Halcyon",c:"var(--rose)",perf:-.019},
+ {id:"tam",name:"Tamura",c:"var(--red)",perf:-.022},
+ {id:"brw",name:"Brightwater",c:"var(--brown)",perf:-.026},
+ {id:"sab",name:"Sable",c:"var(--hard)",perf:-.03}];
+const CODES=[["NOV","SAE"],["BRA","LIN"],["OKA","FER"],["HAL","DUM"],["RIV","MAT"],["PAK","SOL"],["VEG","ANS"],["IKE","MOR"],["CAL","ZHU"],["KIM","LAR"]];
+const NUMS=[[7,24],[1,16],[44,9],[31,5],[12,27],[3,18],[22,10],[14,8],[55,30],[2,77]];
+const DRIVERS=[];
+TEAMS.forEach((t,i)=>CODES[i].forEach((c,j)=>{const r=rng(i*31+j*7+3);DRIVERS.push({code:c,num:NUMS[i][j],team:t,perf:t.perf+(r()-.5)*.009,top:(r()-.5)*8,seed:i*100+j*10+1})}));
+const TL=5214,STEP=20,N=Math.round(TL/STEP)+1;
+const CORNERS=[[420,95],[780,160],[1150,232],[1600,118],[1980,84],[2400,192],[2850,140],[3300,262],[3700,104],[4100,176],[4550,72],[4950,214]];
+const SESSIONS=["FP1","FP2","FP3","Q","R"];
+const CHECKPOINTS=["FP1","FP2","FP3","Q"];
+
+function makeLap(d,sess){
+  const r=rng(d.seed*13+SESSIONS.indexOf(sess)*977+5);
+  const sessGain={FP1:-.012,FP2:-.007,FP3:-.004,Q:0,R:-.018}[sess];
+  const f=1+d.perf+sessGain;
+  const cv=CORNERS.map(c=>c[1]*(f+(r()-.5)*.035));
+  const vmax=330+d.perf*260+d.top+(r()-.5)*4+sessGain*200;
+  const v=new Float32Array(N),thr=new Float32Array(N),brk=new Float32Array(N),gear=new Uint8Array(N),t=new Float32Array(N);
+  for(let i=0;i<N;i++){const x=i*STEP;let best=vmax,side=0,dist=0;
+    for(let k=0;k<CORNERS.length;k++)for(const off of [-TL,0,TL]){const dd=x-(CORNERS[k][0]+off);const lim=cv[k]+(dd<0?9.6:5.3)*Math.sqrt(Math.abs(dd));if(lim<best){best=lim;side=dd<0?-1:1;dist=Math.abs(dd)}}
+    v[i]=best;thr[i]=side===1?Math.min(100,30+dist*.45):side===-1?(dist<30?18:0):100;brk[i]=side===-1&&dist>=30?1:0;
+    gear[i]=1+[95,135,170,205,240,275,305].filter(g=>best>g).length}
+  let time=0;t[0]=0;for(let i=1;i<N;i++){time+=STEP/(((v[i]+v[i-1])/2)/3.6);t[i]=time}
+  return{v,thr,brk,gear,t,time,cv,vmax}}
+const cache={};
+function S(sess){if(cache[sess])return cache[sess];
+  const list=DRIVERS.map(d=>{const lap=makeLap(d,sess);const r=rng(d.seed+SESSIONS.indexOf(sess)*3);return{...d,lap,best:lap.time,tyre:sess==="Q"?"S":["S","M","H"][Math.floor(r()*3)],laps:Math.round(sess==="R"?57:14+r()*16)}});
+  list.sort((a,b)=>a.best-b.best);const by={};list.forEach((d,i)=>{d.pos=i+1;by[d.code]=d});
+  return cache[sess]={list,by,fast:list[0].best}}
+
+/* track geometry */
+const TRACK=[];{for(let i=0;i<N;i++){const th=2*Math.PI*i/(N-1);const rr=1+.27*Math.sin(2*th+.4)+.13*Math.cos(3*th+.5)+.06*Math.sin(5*th);TRACK.push([Math.cos(th)*rr*1.35,Math.sin(th)*rr])}
+  const xs=TRACK.map(p=>p[0]),ys=TRACK.map(p=>p[1]);const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  TRACK.forEach(p=>{p[0]=(p[0]-x0)/(x1-x0);p[1]=(p[1]-y0)/(y1-y0)});TRACK.ar=(x1-x0)/(y1-y0)}
+
+/* ================= state ================= */
+const DEF_CTX={session:"Q",primary:"NOV",compare:"BRA",cursor:1980,checkpoint:"Q"};
+const DEF_SET={theme:"system",units:"kmh",density:"comfy",cb:false,mode:"local"};
+let uid=1;const W=(type,cs,rs)=>({id:"w"+(uid++),type,cs,rs,pinned:null});
+function presets(){uid=1;return{
+ pitwall:{name:"Pit wall",hint:"3 monitors · race weekend",monitors:[
+   [W("session",4,5),W("forecast",8,3),W("weather",4,2),W("standings",4,2)],
+   [W("telemetry",8,3),W("trackmap",4,3),W("delta",7,2),W("corners",5,2)],
+   [W("chat",5,4),W("quality",7,2),W("scoreboard",7,2)]]},
+ performance:{name:"Performance",hint:"1 large monitor · driver comparison",monitors:[[W("telemetry",8,3),W("trackmap",4,3),W("delta",7,2),W("corners",5,2)]]},
+ strategy:{name:"Strategy",hint:"before qualifying and the race",monitors:[[W("longruns",7,3),W("forecast",5,3),W("scoreboard",6,3),W("weather",6,3)]]},
+ debrief:{name:"Debrief",hint:"after the race · where the time went",monitors:[[W("debrief",7,3),W("delta",5,3),W("corners",6,3),W("chat",6,3)]]},
+ laptop:{name:"Laptop",hint:"one window at a time, as tabs",tabs:true,monitors:[[W("session",12,5),W("forecast",12,5),W("telemetry",12,5),W("trackmap",12,5),W("longruns",12,5),W("chat",12,5)]]}}}
+let st={ctx:{...DEF_CTX},set:{...DEF_SET},preset:"pitwall",mon:0,tab:0,layouts:presets()};
+const KEY="dpec-pitwall-proto-v1";
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.layouts){st={...st,...s,ctx:{...DEF_CTX,...s.ctx},set:{...DEF_SET,...s.set}};uid=1+Math.max(0,...Object.values(st.layouts).flatMap(p=>p.monitors.flat()).map(w=>+w.id.slice(1)||0))}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+
+const params=(()=>{try{return new URLSearchParams(location.search)}catch(e){return new URLSearchParams()}})();
+let bc=null;try{bc=new BroadcastChannel("dpec-pitwall")}catch(e){}
+const inst=new Map();// id -> {def,el,body,tb,state,w}
+
+function setCtx(patch,remote){
+  Object.assign(st.ctx,patch);
+  if(patch.session&&!patch.checkpoint&&!remote){st.ctx.checkpoint=patch.session==="R"?"Q":patch.session}
+  if(!remote&&bc)try{bc.postMessage({ctx:st.ctx})}catch(e){}
+  syncHeader();
+  const keys=Object.keys(patch);
+  for(const i of inst.values()){if(i.w.pinned)continue;if(i.def.deps.some(k=>keys.includes(k))||keys.includes("session"))schedule(i)}
+  if(!keys.every(k=>k==="cursor"))save()}
+if(bc)bc.onmessage=e=>{if(e.data&&e.data.ctx){const p={};for(const k in e.data.ctx)if(e.data.ctx[k]!==st.ctx[k])p[k]=e.data.ctx[k];if(Object.keys(p).length)setCtx(p,true)}};
+const ctxOf=i=>i.w.pinned||st.ctx;
+const sp=v=>st.set.units==="mph"?v*.6214:v;const spU=()=>st.set.units==="mph"?"mph":"km/h";
+
+/* ================= chart helpers ================= */
+const scale=(d0,d1,r0,r1)=>{const k=(r1-r0)/((d1-d0)||1);const f=v=>r0+(v-d0)*k;f.inv=p=>d0+(p-r0)/k;return f};
+function nice(x){const e=Math.pow(10,Math.floor(Math.log10(x)));const f=x/e;return(f<1.5?1:f<3?2:f<7?5:10)*e}
+function ticks(a,b,n){const s=nice((b-a)/n);const o=[];for(let v=Math.ceil(a/s)*s;v<=b+1e-9;v+=s)o.push(+v.toFixed(6));return o}
+const pth=(xs,ys,X,Y)=>{let s="";for(let i=0;i<xs.length;i++)s+=(i?"L":"M")+X(xs[i]).toFixed(1)+","+Y(ys[i]).toFixed(1);return s};
+const DIST=Array.from({length:N},(_,i)=>i*STEP);
+const svg=(w,h,inner)=>`<svg class="ch" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img">${inner}</svg>`;
+const idxAt=d=>clamp(Math.round(d/STEP),0,N-1);
+
+/* ================= window types ================= */
+const DEFS={};
+const def=(type,o)=>DEFS[type]={type,deps:[],chart:false,...o};
+
+def("session",{title:"Session board",mart:"mart_session_overview",color:"var(--orange)",deps:["primary","compare"],
+ render(i){const c=ctxOf(i),D=S(c.session);
+  i.tb.innerHTML=`<span>${c.session==="R"?"Race · fastest laps":c.session+" · best laps"}</span><span>Click a row to drive · <b>VS</b> to compare</span>`;
+  i.body.innerHTML=`<table class="tt"><thead><tr><th>P</th><th>Driver</th><th class="num">Best</th><th class="num">Gap</th><th>Tyre</th><th class="num">Laps</th><th></th></tr></thead><tbody>${
+   D.list.map(d=>`<tr class="click ${d.code===c.primary?"p1":d.code===c.compare?"p2":""}" data-code="${d.code}">
+    <td>${d.pos}</td><td><span class="teamchip" style="background:${d.team.c}"></span><span class="drv">${d.code}</span> <span class="note">${d.num}</span>${d.team.id==="dpec"?'<span class="ours">★ OURS</span>':""}</td>
+    <td class="num">${fmtLap(d.best)}</td><td class="num">${d.pos===1?"—":"+"+(d.best-D.fast).toFixed(3)}</td>
+    <td>${tyre(d.tyre)}</td><td class="num">${d.laps}</td><td><button class="vs" data-vs="${d.code}" aria-label="Compare with ${d.code}">VS</button></td></tr>`).join("")}</tbody></table>`;
+  i.body.onclick=e=>{const v=e.target.closest("[data-vs]");if(v){setCtx({compare:v.dataset.vs});return}const r=e.target.closest("tr[data-code]");if(r)setCtx({primary:r.dataset.code})}}});
+function tyre(t){const c={S:"var(--soft)",M:"var(--med)",H:"var(--hard)"}[t];return`<span class="tyre" style="--c:${c}" title="${{S:"Soft",M:"Medium",H:"Hard"}[t]}">${t}</span>`}
+
+def("telemetry",{title:"Telemetry traces",mart:"mart_telemetry_overlay",color:"var(--blue)",chart:true,deps:["primary","compare","cursor"],
+ render(i){const c=ctxOf(i),D=S(c.session),A=D.by[c.primary],B=D.by[c.compare],w=i.body.clientWidth,h=i.body.clientHeight;if(w<50||h<50)return;
+  const k=idxAt(c.cursor);
+  i.tb.innerHTML=`<span class="legend"><span><i style="background:var(--s1)"></i>${A.code}</span><span><i style="background:var(--s2)"></i>${B.code}</span></span>
+   <span>@ <b style="color:var(--ink)">${Math.round(c.cursor).toLocaleString()} m</b></span>
+   <span>${A.code} ${Math.round(sp(A.lap.v[k]))} · ${B.code} ${Math.round(sp(B.lap.v[k]))} ${spU()}</span><span>gear ${A.lap.gear[k]} / ${B.lap.gear[k]}</span>`;
+  const pl=48,pr=12,top=20,bot=22;const X=scale(0,TL,pl,w-pr);
+  const strips=[["v","Speed",.5,[50,345]],["thr","Throttle",.22,[0,100]],["brk","Brake",.1,[0,1]],["gear","Gear",.18,[1,8]]];
+  const avail=h-top-bot-3*8;let y=top,out="";
+  CORNERS.forEach((cn,j)=>{out+=`<line class="corner" x1="${X(cn[0])}" x2="${X(cn[0])}" y1="${top-4}" y2="${h-bot}"/><text x="${X(cn[0])}" y="${top-7}" text-anchor="middle">T${j+1}</text>`});
+  for(const [key,lab,frac,dom] of strips){const hh=avail*frac,Y=scale(dom[0],dom[1],y+hh,y);
+    out+=`<rect x="${pl}" y="${y}" width="${w-pl-pr}" height="${Math.max(0,hh)}" fill="none" class="grid"/>`;
+    if(key==="v")ticks(dom[0],dom[1],3).forEach(t=>{out+=`<line class="grid" x1="${pl}" x2="${w-pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)+4}" text-anchor="end">${Math.round(sp(t))}</text>`});
+    out+=`<text class="lab" x="${pl+6}" y="${y+13}">${lab}${key==="v"?" "+spU():""}</text>`;
+    for(const [d,col,sw] of [[B,"var(--s2)",3.4],[A,"var(--s1)",1.7]])out+=`<path d="${pth(DIST,d.lap[key],X,Y)}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linejoin="round" opacity="${sw>3?.75:1}"/>`;
+    y+=hh+8}
+  ticks(0,TL,6).forEach(t=>out+=`<text x="${X(t)}" y="${h-6}" text-anchor="middle">${t/1000}k</text>`);
+  out+=`<line class="cursor" x1="${X(c.cursor)}" x2="${X(c.cursor)}" y1="${top}" y2="${h-bot}"/>`;
+  i.body.innerHTML=svg(w,h,out);i.X=X},
+ move(i,x){if(i.X)setCtx({cursor:clamp(i.X.inv(x),0,TL)})}});
+
+def("trackmap",{title:"Track map",mart:"mart_track_map",color:"var(--teal)",chart:true,deps:["primary","compare","cursor"],
+ render(i){const c=ctxOf(i),D=S(c.session),A=D.by[c.primary],B=D.by[c.compare],w=i.body.clientWidth,h=i.body.clientHeight;if(w<50||h<50)return;
+  const mode=i.state.mode||"speed";
+  i.tb.innerHTML=`<div class="seg" data-seg="mode">${["speed","delta"].map(m=>`<button aria-pressed="${m===mode}" data-v="${m}">${m==="speed"?"Speed":"Who's faster"}</button>`).join("")}</div>
+   <span class="legend">${mode==="speed"?`<span><i style="background:var(--blue)"></i>slow</span><span><i style="background:var(--teal)"></i></span><span><i style="background:var(--olive)"></i></span><span><i style="background:var(--mustard)"></i></span><span><i style="background:var(--orange)"></i>fast</span>`:`<span><i style="background:var(--s1)"></i>${A.code} faster</span><span><i style="background:var(--s2)"></i>${B.code} faster</span>`}</span>`;
+  const pad=26;let pw=w-2*pad,ph=h-2*pad;if(pw/ph>TRACK.ar)pw=ph*TRACK.ar;else ph=pw/TRACK.ar;const ox=(w-pw)/2,oy=(h-ph)/2;
+  const P=k=>[ox+TRACK[k][0]*pw,oy+(1-TRACK[k][1])*ph];
+  const cols=["var(--blue)","var(--teal)","var(--olive)","var(--mustard)","var(--orange)"];
+  let base=`M${P(0)}`;for(let k=1;k<N;k++)base+=`L${P(k)}`;
+  let out=`<path d="${base}" fill="none" stroke="var(--ink)" stroke-width="12" stroke-linejoin="round" opacity=".85"/>`;
+  for(let k=0;k<N-1;k++){let col;if(mode==="speed"){col=cols[clamp(Math.floor((A.lap.v[k]-70)/55),0,4)]}else{const da=A.lap.t[k+1]-A.lap.t[k],db=B.lap.t[k+1]-B.lap.t[k];col=da<=db?"var(--s1)":"var(--s2)"}
+    out+=`<line x1="${P(k)[0]}" y1="${P(k)[1]}" x2="${P(k+1)[0]}" y2="${P(k+1)[1]}" stroke="${col}" stroke-width="7" stroke-linecap="round"/>`}
+  CORNERS.forEach((cn,j)=>{const [x,y]=P(idxAt(cn[0]));const cx=ox+pw/2,cy=oy+ph/2;const dx=x-cx,dy=y-cy,l=Math.hypot(dx,dy)||1;
+    out+=`<text x="${x+dx/l*17}" y="${y+dy/l*17+4}" text-anchor="middle" class="val">${j+1}</text>`});
+  const [sx,sy]=P(0);out+=`<rect x="${sx-9}" y="${sy-2}" width="18" height="4" fill="var(--paper)" stroke="var(--ink)"/>`;
+  const [cx,cy]=P(idxAt(c.cursor));out+=`<circle cx="${cx}" cy="${cy}" r="9" fill="var(--paper)" stroke="var(--ink)" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="4.5" fill="var(--s1)"/>`;
+  i.body.innerHTML=svg(w,h,out);i.P=P},
+ move(i,x,y){if(!i.P)return;let b=0,bd=1e9;for(let k=0;k<N;k+=1){const p=i.P(k),d=(p[0]-x)**2+(p[1]-y)**2;if(d<bd){bd=d;b=k}}if(bd<1600)setCtx({cursor:b*STEP})},
+ seg(i,k,v){i.state.mode=v;schedule(i)}});
+
+def("delta",{title:"Lap delta",mart:"mart_lap_delta",color:"var(--plum)",chart:true,deps:["primary","compare","cursor"],
+ render(i){const c=ctxOf(i),D=S(c.session),A=D.by[c.primary],B=D.by[c.compare],w=i.body.clientWidth,h=i.body.clientHeight;if(w<50||h<50)return;
+  const dl=Array.from(A.lap.t,(t,k)=>t-B.lap.t[k]);const k=idxAt(c.cursor);
+  i.tb.innerHTML=`<span>${A.code} vs ${B.code} · above 0 = ${A.code} losing time</span><span>@ ${Math.round(c.cursor).toLocaleString()} m: <b style="color:var(--ink)">${sgn(dl[k])} s</b></span><span>lap: <b style="color:var(--ink)">${sgn(dl[N-1])} s</b></span>`;
+  const pl=48,pr=12,top=12,bot=22;const m=Math.max(.15,...dl.map(Math.abs))*1.15;const X=scale(0,TL,pl,w-pr),Y=scale(-m,m,h-bot,top);
+  let out="";ticks(-m,m,4).forEach(t=>out+=`<line class="grid" x1="${pl}" x2="${w-pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)+4}" text-anchor="end">${t.toFixed(2)}</text>`);
+  const line=pth(DIST,dl,X,Y);
+  out+=`<clipPath id="cu${i.w.id}"><rect x="0" y="0" width="${w}" height="${Y(0)}"/></clipPath><clipPath id="cd${i.w.id}"><rect x="0" y="${Y(0)}" width="${w}" height="${h}"/></clipPath>`;
+  const area=line+`L${X(TL)},${Y(0)}L${X(0)},${Y(0)}Z`;
+  out+=`<path d="${area}" fill="var(--s2)" opacity=".28" clip-path="url(#cu${i.w.id})"/><path d="${area}" fill="var(--s1)" opacity=".28" clip-path="url(#cd${i.w.id})"/>`;
+  out+=`<line class="axis" x1="${pl}" x2="${w-pr}" y1="${Y(0)}" y2="${Y(0)}"/><path d="${line}" fill="none" stroke="var(--ink)" stroke-width="1.8"/>`;
+  CORNERS.forEach((cn,j)=>out+=`<text x="${X(cn[0])}" y="${h-6}" text-anchor="middle">T${j+1}</text>`);
+  out+=`<line class="cursor" x1="${X(c.cursor)}" x2="${X(c.cursor)}" y1="${top}" y2="${h-bot}"/><circle cx="${X(c.cursor)}" cy="${Y(dl[k])}" r="4" fill="var(--s1)" stroke="var(--ink)"/>`;
+  i.body.innerHTML=svg(w,h,out);i.X=X},
+ move(i,x){if(i.X)setCtx({cursor:clamp(i.X.inv(x),0,TL)})}});
+
+def("corners",{title:"Corner table",mart:"mart_corner_summary",color:"var(--olive)",deps:["primary","compare","cursor"],
+ render(i){const c=ctxOf(i),D=S(c.session),A=D.by[c.primary],B=D.by[c.compare];
+  let near=0,nd=1e9;CORNERS.forEach((cn,j)=>{const d=Math.abs(cn[0]-c.cursor);if(d<nd){nd=d;near=j}});
+  i.tb.innerHTML=`<span>Minimum speed (${spU()}) and time won or lost through each corner, ±150 m</span>`;
+  const rows=CORNERS.map((cn,j)=>{const a=idxAt(cn[0]-150),b=idxAt(cn[0]+150);const dt=(A.lap.t[b]-A.lap.t[a])-(B.lap.t[b]-B.lap.t[a]);return{j,ma:sp(A.lap.cv[j]),mb:sp(B.lap.cv[j]),dt}});
+  const mx=Math.max(...rows.map(r=>Math.abs(r.dt)),.01);
+  i.body.innerHTML=`<table class="tt"><thead><tr><th>Turn</th><th class="num">${A.code}</th><th class="num">${B.code}</th><th class="num">Δ min</th><th class="num">Δ time</th><th style="width:30%"></th></tr></thead><tbody>${rows.map(r=>`
+   <tr class="click ${r.j===near&&nd<260?"hl":""}" data-d="${CORNERS[r.j][0]}"><td>T${r.j+1}</td><td class="num">${r.ma.toFixed(0)}</td><td class="num">${r.mb.toFixed(0)}</td>
+   <td class="num ${r.ma>=r.mb?"pos":"neg"}">${(r.ma-r.mb>=0?"+":"−")+Math.abs(r.ma-r.mb).toFixed(1)}</td><td class="num ${r.dt<=0?"pos":"neg"}">${sgn(r.dt)}</td>
+   <td>${bar(r.dt,mx)}</td></tr>`).join("")}</tbody></table>`;
+  i.body.onclick=e=>{const r=e.target.closest("tr[data-d]");if(r)setCtx({cursor:+r.dataset.d})}}});
+function bar(v,mx){const p=Math.abs(v)/mx*50;return`<div style="position:relative;height:10px;background:var(--panel2);border-radius:3px"><div style="position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line-strong)"></div><div style="position:absolute;top:0;bottom:0;${v<=0?`right:50%`:`left:50%`};width:${p}%;background:${v<=0?"var(--s1)":"var(--s2)"};border-radius:2px"></div></div>`}
+
+def("longruns",{title:"Long runs & tyres",mart:"mart_long_runs · mart_tyre_stints",color:"var(--mustard)",chart:true,deps:["primary","compare"],
+ render(i){const c=ctxOf(i),w=i.body.clientWidth,h=i.body.clientHeight;if(w<50||h<50)return;
+  const runs=[c.primary,c.compare].map((code,n)=>{const d=DRIVERS.find(x=>x.code===code);const r=rng(d.seed+91);const cmp=n?"H":"M";const deg=(cmp==="M"?.072:.041)+(-d.perf)*1.2+(r()-.5)*.02;
+    const base=95.2-d.perf*95+(cmp==="H"?.45:0);const pts=[];for(let l=1;l<=16;l++)pts.push([l,base+deg*l-.055*l+gauss(r)*.11]);
+    const n_=pts.length,mx=pts.reduce((a,p)=>a+p[0],0)/n_,my=pts.reduce((a,p)=>a+p[1],0)/n_;const sl=pts.reduce((a,p)=>a+(p[0]-mx)*(p[1]-my),0)/pts.reduce((a,p)=>a+(p[0]-mx)**2,0);
+    const res=Math.sqrt(pts.reduce((a,p)=>a+(p[1]-(my+sl*(p[0]-mx)))**2,0)/(n_-2));return{code,cmp,pts,sl,ic:my-sl*mx,res,deg,col:n?"var(--s2)":"var(--s1)"}});
+  i.tb.innerHTML=`<span>FP2 long runs · fuel-corrected trend</span>${runs.map(r=>`<span class="chip" style="--c:${r.col}">${r.code} ${tyre(r.cmp)} deg ${(r.deg).toFixed(3)} s/lap ± ${(r.res/4).toFixed(3)}</span>`).join("")}`;
+  const pl=52,pr=14,top=14,bot=26;const all=runs.flatMap(r=>r.pts.map(p=>p[1]));const y0=Math.min(...all)-.3,y1=Math.max(...all)+.3;
+  const X=scale(.5,16.5,pl,w-pr),Y=scale(y0,y1,h-bot,top);let out="";
+  ticks(y0,y1,4).forEach(t=>out+=`<line class="grid" x1="${pl}" x2="${w-pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)+4}" text-anchor="end">${fmtLap(t).slice(0,-2)}</text>`);
+  [1,4,8,12,16].forEach(t=>out+=`<text x="${X(t)}" y="${h-8}" text-anchor="middle">L${t}</text>`);
+  runs.forEach(r=>{const band=1.28*r.res;const f=l=>r.ic+r.sl*l;
+    out+=`<path d="M${X(1)},${Y(f(1)+band)}L${X(16)},${Y(f(16)+band)}L${X(16)},${Y(f(16)-band)}L${X(1)},${Y(f(1)-band)}Z" fill="${r.col}" opacity=".14"/>`;
+    out+=`<line x1="${X(1)}" y1="${Y(f(1))}" x2="${X(16)}" y2="${Y(f(16))}" stroke="${r.col}" stroke-width="2"/>`;
+    r.pts.forEach(p=>out+=`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="3.6" fill="var(--panel)" stroke="${r.col}" stroke-width="2"/>`)});
+  i.body.innerHTML=svg(w,h,out)}});
+
+def("forecast",{title:"Weekend forecast",mart:"ledger · forecaster",color:"var(--red)",chart:true,deps:["checkpoint","primary"],
+ render(i){const c=ctxOf(i),w=i.body.clientWidth;let h=i.body.clientHeight;if(w<50||h<50)return;
+  const cp=c.checkpoint;if(w<=560)h-=58;const width={FP1:.62,FP2:.42,FP3:.34,Q:.27}[cp];
+  const D=S("R");const rows=D.list.map(d=>{const r=rng(d.seed+CHECKPOINTS.indexOf(cp)*17);const m=(d.best-D.fast)/57*40+gauss(r)*.06;return{d,m,hw:width*(.8+r()*.45)}});
+  rows.sort((a,b)=>a.m-b.m);const off=rows[0].m;rows.forEach(r=>r.m-=off);
+  const our=D.by[c.primary].team.id==="dpec"?c.primary:"NOV";const me=rows.find(r=>r.d.code===our);
+  const r2=rng(77+CHECKPOINTS.indexOf(cp));const hist=new Array(10).fill(0);
+  for(let s=0;s<1500;s++){const draws=rows.map(r=>({c:r.d.code,v:r.m+gauss(r2)*r.hw/1.28}));draws.sort((a,b)=>a.v-b.v);const p=draws.findIndex(x=>x.c===our);if(p<10)hist[p]++}
+  const pmax=Math.max(...hist);const top3=hist.slice(0,3).reduce((a,b)=>a+b,0)/15;
+  i.tb.innerHTML=`<span>After</span><div class="seg" data-seg="checkpoint">${CHECKPOINTS.map(k=>`<button aria-pressed="${k===cp}" data-v="${k}">${k}</button>`).join("")}</div>
+   <span>Race pace, gap to fastest car per lap · 80% range</span>`;
+  const side=w>560;const fw=side?Math.round(w*.62):w,fh=side?h:Math.round(h*.55);const n=Math.min(12,rows.length);
+  const pl=88,pr=14,top=10,bot=24;const X=scale(-.15,Math.max(...rows.slice(0,n).map(r=>r.m+r.hw))+.05,pl,fw-pr);const rowH=(fh-top-bot)/n;
+  let out="";ticks(0,X.inv(fw-pr),4).forEach(t=>out+=`<line class="grid" x1="${X(t)}" x2="${X(t)}" y1="${top}" y2="${fh-bot}"/><text x="${X(t)}" y="${fh-8}" text-anchor="middle">+${t.toFixed(1)}s</text>`);
+  rows.slice(0,n).forEach((r,k)=>{const y=top+rowH*(k+.5);const ours=r.d.team.id==="dpec";
+    out+=`<text x="8" y="${y+4}" class="${ours?"val":""}">${k+1}. ${r.d.code}${ours?" ★":""}</text>`;
+    out+=`<line x1="${X(Math.max(-.15,r.m-r.hw))}" x2="${X(r.m+r.hw)}" y1="${y}" y2="${y}" stroke="${r.d.team.c}" stroke-width="${Math.min(9,rowH*.45)}" stroke-linecap="round" opacity="${ours?.9:.45}"/>`;
+    out+=`<circle cx="${X(r.m)}" cy="${y}" r="${Math.min(5,rowH*.3)}" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>`});
+  let hs="";if(true){const hw=side?w-fw:w,hh=side?h:h-fh,ox=side?fw:0,oy=side?0:fh;const bl=ox+16,br=ox+hw-14,bt=oy+44,bb=oy+hh-40;const bwid=(br-bl)/10;
+    hs+=`<text class="lab" x="${bl}" y="${oy+18}">${our} finishing position</text><text x="${bl}" y="${oy+34}">P(top 3) = <tspan class="val">${top3.toFixed(0)}%</tspan></text>`;
+    hist.forEach((v,p)=>{const bh=Math.max(0,(bb-bt)*v/pmax);hs+=`<rect x="${bl+p*bwid+2}" y="${bb-bh}" width="${bwid-4}" height="${bh}" rx="2" fill="${p<3?"var(--orange)":"var(--mustard)"}" opacity="${p<3?.95:.6}"/><text x="${bl+p*bwid+bwid/2}" y="${bb+14}" text-anchor="middle">P${p+1}</text>`});
+    hs+=`<line class="axis" x1="${bl}" x2="${br}" y1="${bb}" y2="${bb}"/>`}
+  i.body.innerHTML=svg(w,h,out+hs)+`<div style="${side?"position:absolute;right:14px;bottom:14px":"padding:8px 14px;text-align:right"}"><span class="stamp">Frozen · ledger #${418+CHECKPOINTS.indexOf(cp)} · sha ${["7c1e9a2","b04f13d","e92a6c0","3fd81b7"][CHECKPOINTS.indexOf(cp)]}<br>committed before ${cp==="Q"?"the race":CHECKPOINTS[CHECKPOINTS.indexOf(cp)+1]}</span></div>`},
+ seg(i,k,v){setCtx({checkpoint:v},false);if(i.w.pinned){i.w.pinned.checkpoint=v;schedule(i)}}});
+
+def("scoreboard",{title:"Season scoreboard",mart:"ledger_scores",color:"var(--sky)",chart:true,deps:[],
+ render(i){const w=i.body.clientWidth,h=i.body.clientHeight;if(w<50||h<50)return;
+  const r=rng(9);const R=17;const model=[],prev=[],prac=[];for(let k=1;k<=R;k++){const hard=k===6||k===11?.18:0;model.push(.2+hard+r()*.12-(k>8?.03:0));prev.push(.33+hard+r()*.16);prac.push(.29+hard*1.3+r()*.15)}
+  const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  const kh=78;const cw=w,chH=h-kh-4;
+  const pl=40,pr=12,top=16,bot=24;const X=scale(1,R,pl,cw-pr),Y=scale(0,.75,kh+chH-bot,kh+top);let out="";
+  ticks(0,.75,3).forEach(t=>out+=`<line class="grid" x1="${pl}" x2="${cw-pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)+4}" text-anchor="end">${t.toFixed(1)}</text>`);
+  [1,5,9,13,17].forEach(t=>out+=`<text x="${X(t)}" y="${kh+chH-6}" text-anchor="middle">R${t}</text>`);
+  const ks=Array.from({length:R},(_,k)=>k+1);
+  [[prev,"var(--blue)","4 4"],[prac,"var(--teal)","1 4"],[model,"var(--orange)",""]].forEach(([a,col,da])=>{out+=`<path d="${pth(ks,a,X,Y)}" fill="none" stroke="${col}" stroke-width="${da?1.8:2.6}" stroke-dasharray="${da}" stroke-linecap="round"/>`});
+  out+=`<circle cx="${X(R)}" cy="${Y(model[R-1])}" r="4.5" fill="var(--orange)" stroke="var(--panel)" stroke-width="2"/>`;
+  i.tb.innerHTML=`<span class="legend"><span><i style="background:var(--orange)"></i>DPEC model</span><span><i style="background:var(--blue)"></i>Baseline: last race</span><span><i style="background:var(--teal)"></i>Baseline: practice best</span></span><span>error per round, s/lap</span>`;
+  i.body.innerHTML=`<div class="kpis" style="height:${kh}px;padding-block:6px"><div class="kpi"><div class="k">Model error</div><div class="v">${avg(model).toFixed(2)}s</div></div><div class="kpi"><div class="k">Best baseline</div><div class="v">${Math.min(avg(prev),avg(prac)).toFixed(2)}s</div></div><div class="kpi"><div class="k">80% range hit rate</div><div class="v" style="color:var(--teal)">79%</div></div></div>`+svg(cw,chH+kh,out).replace('<svg class="ch"','<svg class="ch" style="position:absolute;left:0;top:0;pointer-events:none"')}});
+
+def("debrief",{title:"Attribution debrief",mart:"debrief_weekend",color:"var(--brown)",chart:true,deps:["primary","compare"],
+ render(i){const c=ctxOf(i),D=S(c.session),A=D.by[c.primary],B=D.by[c.compare],w=i.body.clientWidth,h=i.body.clientHeight;if(w<50||h<50)return;
+  const tot=A.best-B.best;const r=rng(A.seed*3+B.seed);const parts=[["Straights",.25],["Braking",-.1],["Corner speed",.55],["Traction",.2],["Traffic",.06],["Track evolution",.04]].map(([n,f])=>[n,f+(r()-.5)*.3]);
+  const s=parts.reduce((a,p)=>a+p[1],0);parts.forEach(p=>p[1]=p[1]/s*tot);
+  const textH=Math.min(110,h*.35);const ch=h-textH;const pl=118,pr=60,top=10,bot=10;const rows=parts.length+1;const rh=(ch-top-bot)/rows;
+  let acc=0;const vals=[0];parts.forEach(p=>{acc+=p[1];vals.push(acc)});const lo=Math.min(0,...vals),hi=Math.max(0,...vals);const pad=(hi-lo)*.15+.02;const X=scale(lo-pad,hi+pad,pl,w-pr);
+  let out=`<line class="axis" x1="${X(0)}" x2="${X(0)}" y1="${top}" y2="${ch-bot}"/>`;acc=0;
+  parts.forEach((p,k)=>{const y=top+rh*k;const a=X(acc),b=X(acc+p[1]);out+=`<text x="${pl-8}" y="${y+rh/2+4}" text-anchor="end" class="lab">${p[0]}</text><rect x="${Math.min(a,b)}" y="${y+rh*.2}" width="${Math.max(1.5,Math.abs(b-a))}" height="${rh*.6}" rx="2" fill="${p[1]>0?"var(--s2)":"var(--s1)"}" opacity=".85"/><text x="${Math.max(a,b)+5}" y="${y+rh/2+4}">${sgn(p[1])}</text>`;
+    if(k<parts.length-1)out+=`<line x1="${b}" x2="${b}" y1="${y+rh*.8}" y2="${y+rh*1.2}" stroke="var(--line-strong)" stroke-dasharray="2 2"/>`;acc+=p[1]});
+  const y=top+rh*parts.length;out+=`<text x="${pl-8}" y="${y+rh/2+4}" text-anchor="end" class="lab val">Total gap</text><rect x="${Math.min(X(0),X(tot))}" y="${y+rh*.15}" width="${Math.max(2,Math.abs(X(tot)-X(0)))}" height="${rh*.7}" rx="2" fill="var(--ink)"/><text x="${Math.max(X(0),X(tot))+5}" y="${y+rh/2+4}" class="val">${sgn(tot)}</text>`;
+  const worst=[...parts].sort((a,b)=>b[1]-a[1])[0];
+  i.tb.innerHTML=`<span>${A.code} vs ${B.code} · ${c.session} best laps · parts add up to the total gap</span>`;
+  i.body.innerHTML=svg(w,ch,out)+`<div class="pad typed" style="border-top:1px dashed var(--line)">${tot>0?`${A.code} was <b>${tot.toFixed(3)} s</b> slower than ${B.code}. The biggest piece is <b>${worst[0].toLowerCase()} (${sgn(worst[1])} s)</b>.`:`${A.code} was <b>${Math.abs(tot).toFixed(3)} s</b> quicker than ${B.code}.`} Fuel load and setup are not public, so they are not in this split.</div>`}});
+
+def("weather",{title:"Weather & track",mart:"mart_weather · mart_track_evolution",color:"var(--sky)",chart:true,deps:[],
+ render(i){const c=ctxOf(i),w=i.body.clientWidth,h=i.body.clientHeight;if(w<50||h<50)return;
+  const r=rng(SESSIONS.indexOf(c.session)+40);const T=Array.from({length:13},(_,k)=>k*5);const air=T.map(t=>24+t*.03+gauss(r)*.2),trk=T.map(t=>38+t*.12-(t>40?1.5:0)+gauss(r)*.4);
+  i.tb.innerHTML=`<span class="chips"><span class="chip" style="--c:var(--orange)">Track ${trk[12].toFixed(1)}°C</span><span class="chip" style="--c:var(--sky)">Air ${air[12].toFixed(1)}°C</span><span class="chip" style="--c:var(--teal)">Wind 3.1 m/s NE</span><span class="chip" style="--c:var(--blue)">Rain 10%</span></span>`;
+  const pl=36,pr=12,top=12,bot=22;const X=scale(0,60,pl,w-pr),Y=scale(18,46,h-bot,top);let out="";
+  ticks(20,45,4).forEach(t=>out+=`<line class="grid" x1="${pl}" x2="${w-pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl-6}" y="${Y(t)+4}" text-anchor="end">${t}°</text>`);
+  [0,15,30,45,60].forEach(t=>out+=`<text x="${X(t)}" y="${h-6}" text-anchor="middle">${t}′</text>`);
+  out+=`<path d="${pth(T,trk,X,Y)}L${X(60)},${Y(18)}L${X(0)},${Y(18)}Z" fill="var(--orange)" opacity=".12"/><path d="${pth(T,trk,X,Y)}" fill="none" stroke="var(--orange)" stroke-width="2.2"/><path d="${pth(T,air,X,Y)}" fill="none" stroke="var(--sky)" stroke-width="2.2"/>`;
+  out+=`<text x="${X(60)-4}" y="${Y(trk[12])-8}" text-anchor="end" class="lab">track</text><text x="${X(60)-4}" y="${Y(air[12])-8}" text-anchor="end" class="lab">air</text>`;
+  i.body.innerHTML=svg(w,h,out)}});
+
+def("quality",{title:"Data quality",mart:"mart_data_quality",color:"var(--teal)",deps:[],
+ render(i){const c=ctxOf(i);const score={FP1:88,FP2:93,FP3:91,Q:96,R:84}[c.session];const R=34,C=2*Math.PI*R;
+  const tags=[["Observed",62,"var(--teal)"],["Derived",27,"var(--blue)"],["Estimated",8,"var(--mustard)"],["Unknown",3,"var(--red)"]];
+  i.tb.innerHTML=`<span>${c.session} · checked ${["06:12","11:40","09:05","15:22","17:48"][SESSIONS.indexOf(c.session)]} · rebuildable from raw</span>`;
+  i.body.innerHTML=`<div class="pad" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+   <svg class="ch" width="96" height="96" viewBox="0 0 96 96" aria-label="Quality score ${score}"><circle cx="48" cy="48" r="${R}" fill="none" stroke="var(--line)" stroke-width="10"/>
+    <circle cx="48" cy="48" r="${R}" fill="none" stroke="${score>90?"var(--teal)":"var(--mustard)"}" stroke-width="10" stroke-dasharray="${C*score/100} ${C}" transform="rotate(-90 48 48)" stroke-linecap="round"/>
+    <text x="48" y="54" text-anchor="middle" class="val" style="font-size:20px">${score}</text></svg>
+   <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px">
+    <div class="chips"><span class="chip" style="--c:var(--mustard)">${c.session==="R"?"SC laps 4":"Yellow flag laps 3"}</span><span class="chip" style="--c:var(--red)">Deleted laps 2</span><span class="chip" style="--c:var(--blue)">Traffic laps 11</span><span class="chip" style="--c:var(--plum)">Missing samples 0.4%</span></div>
+    <div style="display:flex;height:16px;border-radius:4px;overflow:hidden;border:1px solid var(--line-strong)">${tags.map(t=>`<div title="${t[0]} ${t[1]}%" style="width:${t[1]}%;background:${t[2]}"></div>`).join("")}</div>
+    <div class="legend note">${tags.map(t=>`<span><i style="background:${t[2]}"></i>${t[0]} ${t[1]}%</span>`).join("")}</div>
+    <div class="note">Every column carries one of these tags. Fuel, setup, ERS and aero state are never shown as measured.</div></div></div>`}});
+
+def("standings",{title:"Standings & calendar",mart:"mart_standings · mart_calendar",color:"var(--olive)",deps:[],
+ render(i){const pts=[412,398,371,240,188,141,97,61,30,12];
+  i.body.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 14px"><table class="tt"><thead><tr><th>Team</th><th class="num">Pts</th></tr></thead><tbody>${
+   [...TEAMS].sort((a,b)=>b.perf-a.perf).map((t,k)=>`<tr><td><span class="teamchip" style="background:${t.c}"></span>${t.name}${t.id==="dpec"?'<span class="ours">★</span>':""}</td><td class="num">${pts[k]}</td></tr>`).slice(0,6).join("")}</tbody></table>
+   <table class="tt"><thead><tr><th>Next up</th><th class="num">Local</th></tr></thead><tbody>
+   <tr><td>RD18 Race</td><td class="num">Sun 15:00</td></tr><tr><td>RD19 FP1</td><td class="num">Fri 31 Oct</td></tr><tr><td>RD19 Quali</td><td class="num">Sat 1 Nov</td></tr><tr><td>RD19 Race</td><td class="num">Sun 2 Nov</td></tr><tr><td>Ledger freeze</td><td class="num">Q −30 min</td></tr></tbody></table></div>`}});
+
+def("chat",{title:"Race engineer",mart:"AI · router → engineer / strategist",color:"var(--plum)",deps:[],
+ render(i){if(!i.state.msgs)i.state.msgs=[{me:0,route:"ENGINEER",t:"Radio check. I can read the marts, the forecasts and the ledger. Ask me about the car, the tyres or the plan."}];
+  i.tb.innerHTML=`<span class="chip" style="--c:var(--plum)">Claude API</span><span class="chip" style="--c:var(--hard)">Ollama offline</span><span>Sample answers only</span>`;
+  i.body.innerHTML=`<div class="radio"><div class="log">${i.state.msgs.map(m=>`<div class="msg ${m.me?"me":"ai"}"><div class="who">${m.me?"Pit wall":`<span>Engineer</span><span class="route ${m.route==="STRATEGIST"?"st":m.route==="NOT PUBLIC"?"np":""}">${m.route}</span>`}</div><div class="bubble">${m.t}</div></div>`).join("")}</div>
+   <div class="sugg">${["Where is "+ctxOf(i).primary+" losing time?","One stop or two?","What fuel load is "+ctxOf(i).compare+" on?"].map(q=>`<button data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+   <form class="ask"><input id="ask-${i.w.id}" placeholder="Ask the pit wall…" autocomplete="off" aria-label="Question"><button class="btn sm go" type="submit">Send</button></form></div>`;
+  const log=$(".log",i.body);log.scrollTop=log.scrollHeight;
+  const send=q=>{if(!q.trim())return;i.state.msgs.push({me:1,t:esc(q)});const a=answer(q,ctxOf(i));i.state.msgs.push(a);schedule(i);if(a.go!=null&&!i.w.pinned)setCtx({cursor:a.go})};
+  $("form",i.body).onsubmit=e=>{e.preventDefault();send($("input",i.body).value)};
+  i.body.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>send(b.dataset.q))}});
+function answer(q,c){const s=q.toLowerCase();const D=S(c.session),A=D.by[c.primary],B=D.by[c.compare];
+  if(/fuel|setup|ers|battery|aero|tyre temp/.test(s))return{route:"NOT PUBLIC",t:"Not public. Fuel load, setup, ERS and active-aero state are not in the public feed. I can show our <b>estimated</b> fuel correction, labelled as estimated."};
+  if(/stop|strategy|pit|undercut/.test(s))return{route:"STRATEGIST",t:"One stop, Medium → Hard, box laps 22–27. Two stops is 3.8 s slower on the median and only wins if Medium deg is above 0.09 s/lap. (Sample answer.)"};
+  if(/forecast|pace|win|podium/.test(s))return{route:"STRATEGIST",t:`Frozen forecast after ${c.checkpoint}: ${A.code} race pace within the top three, P(top 3) shown in the forecast window. Ledger entry is committed before the next session.`};
+  let worst=0,wv=-1;CORNERS.forEach((cn,j)=>{const a=idxAt(cn[0]-150),b=idxAt(cn[0]+150);const dt=(A.lap.t[b]-A.lap.t[a])-(B.lap.t[b]-B.lap.t[a]);if(dt>wv){wv=dt;worst=j}});
+  if(/time|losing|slow|where|corner/.test(s))return{route:"ENGINEER",t:`${A.code} loses most at <b>T${worst+1}</b>: ${sgn(wv)} s to ${B.code}, minimum speed ${Math.round(sp(A.lap.cv[worst]))} vs ${Math.round(sp(B.lap.cv[worst]))} ${spU()}. Moving the cursor there.`,go:CORNERS[worst][0]};
+  return{route:"ENGINEER",t:"Copy. In the prototype I only know a few questions. Try time loss, strategy, forecast or fuel."}}
+
+/* ================= window chrome ================= */
+const ICONS={
+ link:'<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+ pin:'<svg viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M8 3h8l-1 6 3 4H6l3-4z"/></svg>',
+ wide:'<svg viewBox="0 0 24 24"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>',
+ tall:'<svg viewBox="0 0 24 24"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>',
+ pop:'<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+ x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'};
+let raf=new Set(),rafId=0;
+function schedule(i){raf.add(i);if(!rafId)rafId=requestAnimationFrame(()=>{rafId=0;const s=[...raf];raf.clear();s.forEach(draw)})}
+function draw(i){try{i.def.render(i);bindSegs(i)}catch(e){console.error(e)}
+  const ln=i.el.querySelector('[data-act="link"]');if(ln){ln.innerHTML=i.w.pinned?ICONS.pin:ICONS.link;ln.classList.toggle("on",!!i.w.pinned);ln.title=i.w.pinned?"Pinned: keeps its own driver and session. Click to link again.":"Linked: follows the shared context. Click to pin."}
+  const pb=i.el.querySelector(".pinned-badge");if(pb)pb.hidden=!i.w.pinned}
+function bindSegs(i){i.el.querySelectorAll("[data-seg]").forEach(sg=>sg.onclick=e=>{const b=e.target.closest("button[data-v]");if(b&&i.def.seg)i.def.seg(i,sg.dataset.seg,b.dataset.v)})}
+
+function curList(){const p=st.layouts[st.preset];return p.monitors[clamp(st.mon,0,p.monitors.length-1)]}
+let dragId=null;
+function buildWS(){
+  const ws=$("#ws");ws.innerHTML="";for(const i of inst.values())i.ro&&i.ro.disconnect();inst.clear();
+  const p=st.layouts[st.preset];let list=curList();
+  const tabs=$("#tabstrip");
+  if(SOLO){list=SOLO}
+  if(p.tabs&&!SOLO){tabs.hidden=false;st.tab=clamp(st.tab,0,list.length-1);
+    tabs.innerHTML=list.map((w,k)=>`<button role="tab" aria-selected="${k===st.tab}" data-k="${k}" style="--wc:${DEFS[w.type].color}">${DEFS[w.type].title}</button>`).join("");
+    tabs.onclick=e=>{const b=e.target.closest("[data-k]");if(b){st.tab=+b.dataset.k;save();buildWS()}};list=[list[st.tab]]}else tabs.hidden=true;
+  for(const w of list){if(!w)continue;const d=DEFS[w.type];const el=document.createElement("section");el.className="win";el.style.setProperty("--wc",d.color);
+    el.style.setProperty("--cs",SOLO?12:w.cs);el.style.setProperty("--rs",SOLO?5:w.rs);el.dataset.id=w.id;
+    el.innerHTML=`<header class="win-h" draggable="true"><span class="tri" aria-hidden="true"></span><h3>${d.title}</h3><span class="pinned-badge" hidden>Pinned</span><span class="mart">${d.mart}</span>
+     <div class="tools"><button class="ic" data-act="link"></button><button class="ic" data-act="wide" title="Change width">${ICONS.wide}</button><button class="ic" data-act="tall" title="Change height">${ICONS.tall}</button>
+     <button class="ic" data-act="pop" title="Pop out to its own browser window">${ICONS.pop}</button><button class="ic" data-act="close" title="Close window">${ICONS.x}</button></div></header>
+     <div class="win-tb"></div><div class="win-b ${d.chart?"chart":""}"></div>`;
+    ws.appendChild(el);
+    const i={w,def:d,el,tb:$(".win-tb",el),body:$(".win-b",el),state:(PREV_STATE.get(w.id)||{})};inst.set(w.id,i);
+    if(d.move){const mv=e=>{const r=i.body.getBoundingClientRect();const pt=e.touches?e.touches[0]:e;d.move(i,pt.clientX-r.left,pt.clientY-r.top)};i.body.addEventListener("mousemove",mv);i.body.addEventListener("touchmove",mv,{passive:true})}
+    i.ro=new ResizeObserver(()=>schedule(i));i.ro.observe(i.body);
+    $(".tools",el).onclick=e=>{const b=e.target.closest("[data-act]");if(!b)return;act(i,b.dataset.act)};
+    const hd=$(".win-h",el);
+    hd.addEventListener("dragstart",e=>{dragId=w.id;try{e.dataTransfer.setData("text/plain",w.id)}catch(_){};e.dataTransfer.effectAllowed="move"});
+    el.addEventListener("dragover",e=>{if(dragId&&dragId!==w.id){e.preventDefault();el.classList.add("dragover")}});
+    el.addEventListener("dragleave",()=>el.classList.remove("dragover"));
+    el.addEventListener("drop",e=>{e.preventDefault();el.classList.remove("dragover");if(!dragId||dragId===w.id)return;const L=curList();const a=L.findIndex(x=>x.id===dragId),b=L.findIndex(x=>x.id===w.id);if(a>=0&&b>=0){[L[a],L[b]]=[L[b],L[a]];save();keepState();buildWS()}dragId=null});
+    schedule(i)}
+  syncLayoutBar()}
+const PREV_STATE=new Map();function keepState(){for(const [id,i] of inst)PREV_STATE.set(id,i.state)}
+function act(i,a){const L=curList();
+  if(a==="link"){i.w.pinned=i.w.pinned?null:{...st.ctx};if(!i.w.pinned)schedule(i);else draw(i);save();toast(i.w.pinned?`${i.def.title} pinned to ${i.w.pinned.primary} vs ${i.w.pinned.compare}, ${i.w.pinned.session}. It ignores changes now.`:`${i.def.title} follows the shared context again.`)}
+  if(a==="wide"){const o=[4,5,6,7,8,12];i.w.cs=o[(o.indexOf(i.w.cs)+1)%o.length]||6;i.el.style.setProperty("--cs",i.w.cs);save()}
+  if(a==="tall"){const o=[2,3,4,5];i.w.rs=o[(o.indexOf(i.w.rs)+1)%o.length]||3;i.el.style.setProperty("--rs",i.w.rs);save()}
+  if(a==="close"){const k=L.indexOf(i.w);if(k>=0)L.splice(k,1);save();keepState();buildWS();toast(`${i.def.title} closed. Add it back from “+ Add window”.`)}
+  if(a==="pop")popout("win="+i.w.type)}
+function popout(q){let w=null;try{const u=location.href.split("#")[0].split("?")[0]+"?"+q;w=window.open(u,"_blank","popup,width=1000,height=640")}catch(e){}
+  if(!w)toast("Pop-out windows open when you run index.html from your f-1-f folder. They stay in sync with this one and can sit on another monitor.");}
+
+/* ================= header + bars ================= */
+function seg(el,items,cur,on){el.innerHTML=items.map(([v,l])=>`<button aria-pressed="${v===cur}" data-v="${v}">${l}</button>`).join("");el.onclick=e=>{const b=e.target.closest("[data-v]");if(b)on(b.dataset.v)}}
+function syncHeader(){const c=st.ctx;
+  seg($("#sessSeg"),SESSIONS.map(s=>[s,s]),c.session,v=>setCtx({session:v}));
+  const opts=sel=>[...TEAMS].map(t=>`<optgroup label="${t.name}">${DRIVERS.filter(d=>d.team===t).map(d=>`<option value="${d.code}" ${d.code===sel?"selected":""}>${d.code} · ${d.num}</option>`).join("")}</optgroup>`).join("");
+  $("#selP").innerHTML=opts(c.primary);$("#selC").innerHTML=opts(c.compare)}
+$("#selP").onchange=e=>setCtx({primary:e.target.value});$("#selC").onchange=e=>setCtx({compare:e.target.value});
+function syncLayoutBar(){const p=st.layouts[st.preset];
+  seg($("#presetSeg"),Object.entries(st.layouts).map(([k,v])=>[k,v.name]),st.preset,v=>{keepState();st.preset=v;st.mon=0;st.tab=0;save();buildWS();toast(`${st.layouts[v].name}: ${st.layouts[v].hint}.`)});
+  const multi=p.monitors.length>1;$("#monSeg").hidden=$("#monLbl").hidden=$("#btnPopMon").hidden=!multi;
+  if(multi)seg($("#monSeg"),p.monitors.map((m,k)=>[String(k),"Monitor "+(k+1)]),String(st.mon),v=>{keepState();st.mon=+v;save();buildWS()});
+  seg($("#modeSeg"),[["local","Local"],["public","Public"]],st.set.mode,v=>{st.set.mode=v;save();syncLayoutBar();toast(v==="public"?"Public mode: read-only, precomputed data, refreshed daily.":"Local mode: full warehouse, with ingest, forecast and freeze buttons.")});
+  $("#localActs").innerHTML=st.set.mode==="local"?`<button class="btn sm" data-a="Ingest">Ingest</button><button class="btn sm" data-a="Run forecast">Run forecast</button><button class="btn sm" data-a="Freeze to ledger">Freeze</button>`:`<span class="note">Read-only · updated daily</span>`;
+  $("#localActs").onclick=e=>{const b=e.target.closest("[data-a]");if(b)toast(`${b.dataset.a}: not wired up in the prototype. In the real app this runs the ${b.dataset.a.toLowerCase()} job.`)}}
+$("#btnPopMon").onclick=()=>popout("monitor="+st.mon+"&preset="+st.preset);
+$("#btnReset").onclick=()=>{const fresh=presets();st.layouts[st.preset]=fresh[st.preset];/* keep ids unique */let mx=0;Object.values(st.layouts).forEach(p=>p.monitors.flat().forEach(w=>mx=Math.max(mx,+w.id.slice(1))));
+  st.layouts[st.preset].monitors.forEach(m=>m.forEach(w=>w.id="w"+(++mx)));uid=mx+1;save();PREV_STATE.clear();buildWS();toast(`${st.layouts[st.preset].name} layout reset.`)};
+$("#btnAdd").onclick=e=>{const m=$("#addMenu");if(!m.hidden){m.hidden=true;return}
+  m.innerHTML=Object.values(DEFS).map(d=>`<button role="menuitem" data-t="${d.type}" style="--wc:${d.color}"><i></i>${d.title}</button>`).join("");
+  const r=e.currentTarget.getBoundingClientRect();m.hidden=false;m.style.top=(r.bottom+8)+"px";m.style.left=Math.max(16,Math.min(r.right-m.offsetWidth,innerWidth-m.offsetWidth-16))+"px";
+  m.onclick=ev=>{const b=ev.target.closest("[data-t]");if(!b)return;const w=W(b.dataset.t,6,3);curList().push(w);if(st.layouts[st.preset].tabs){w.cs=12;w.rs=5;st.tab=curList().length-1}save();keepState();buildWS();m.hidden=true;
+   const el=document.querySelector(`[data-id="${w.id}"]`);el&&el.scrollIntoView({behavior:"smooth",block:"nearest"})}};
+document.addEventListener("click",e=>{const m=$("#addMenu");if(!m.hidden&&!m.contains(e.target)&&e.target.id!=="btnAdd")m.hidden=true});
+
+/* settings */
+function applySet(){const s=st.set,root=document.documentElement;
+  if(s.theme==="system")root.removeAttribute("data-theme");else root.dataset.theme=s.theme;
+  root.classList.toggle("cb",s.cb);root.classList.toggle("compact",s.density==="compact");
+  seg($("#themeSeg"),[["light","Day session"],["dark","Night session"],["system","System"]],s.theme,v=>{s.theme=v;applySet();save()});
+  seg($("#unitSeg"),[["kmh","km/h"],["mph","mph"]],s.units,v=>{s.units=v;applySet();save();inst.forEach(schedule)});
+  seg($("#densSeg"),[["comfy","Comfortable"],["compact","Compact"]],s.density,v=>{s.density=v;applySet();save()});
+  seg($("#cbSeg"),[["off","Off"],["on","On"]],s.cb?"on":"off",v=>{s.cb=v==="on";applySet();save()})}
+$("#btnSettings").onclick=()=>{$("#drawer").hidden=false};$("#btnClose").onclick=()=>{$("#drawer").hidden=true};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("#drawer").hidden=true;$("#addMenu").hidden=true}});
+
+let tt=0;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3600)}
+
+/* mini track on the ticket */
+{let d="";for(let k=0;k<N;k+=3)d+=(k?"L":"M")+(8+TRACK[k][0]*84).toFixed(1)+","+(62-TRACK[k][1]*54).toFixed(1);$("#miniTrack").innerHTML=`<path d="${d}Z" fill="none" stroke="var(--orange)" stroke-width="3.5" stroke-linejoin="round"/><path d="${d}Z" fill="none" stroke="var(--ink)" stroke-width="1" stroke-linejoin="round"/>`}
+
+
+/* solo / monitor pop-outs */
+let SOLO=null;
+if(params.get("win")&&DEFS[params.get("win")]){SOLO=[W(params.get("win"),12,5)];document.body.classList.add("solo")}
+if(params.get("monitor")!==null&&params.get("preset")&&st.layouts[params.get("preset")]){st.preset=params.get("preset");st.mon=+params.get("monitor")||0}
+
+applySet();syncHeader();buildWS();
+})();
+</script>
+</body>
+</html>
