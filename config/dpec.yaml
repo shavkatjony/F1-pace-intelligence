@@ -1,0 +1,13 @@
+# Team DPEC settings. 
+# Code reads this file; nothing below is hard-coded anywhere else.
+team_name: DPEC
+adopted_team: Mercedes     # D2: the real team whose two cars are "ours". Your pick.
+seasons: [2022, 2023, 2024, 2025, 2026]
+grid_step_m: 5               # distance grid spacing in metres (step A4)
+mode: local                  # local = full system on your Mac, public = read-only online
+
+paths:
+  data: data
+  cache: data/cache
+  raw: data/raw
+  warehouse: data/warehouse.duckdb
