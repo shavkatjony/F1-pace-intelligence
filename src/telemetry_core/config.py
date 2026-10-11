@@ -21,7 +21,7 @@ class Settings(BaseModel):
     team_name: str
     adopted_team: str = Field(min_length=1)
     seasons: list[int]
-    grid_step_m: float = Field(gt=0)
+    grid_step_m: float = Field(gt=0, le=50)
     mode: Literal["local", "public"]
     paths: Paths
 

@@ -40,3 +40,10 @@ def test_wrong_mode_fails(tmp_path):
     data["mode"] = "online"
     with pytest.raises(ValidationError):
         load_settings(write_config(tmp_path, data))
+
+def test_grid_step_too_big_fails(tmp_path):
+    data = good_config()
+    data["grid_step_m"] = 100
+    with pytest.raises(ValidationError):
+        load_settings(write_config(tmp_path, data))
+        
