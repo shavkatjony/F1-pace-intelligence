@@ -2,3 +2,23 @@ __pycache__/
 *.pyc
 .vscode/
 .env
+
+# Data: too big for git, rebuilt by `make data`
+data/
+*.duckdb
+*.parquet
+
+# FastF1 cache, wherever it ends up
+cache/
+*.sqlite
+
+# Notebooks and tools
+.ipynb_checkpoints/
+.ruff_cache/
+.pytest_cache/
+
+# Secrets (API keys later)
+.env
+
+# Mac
+.DS_Store
