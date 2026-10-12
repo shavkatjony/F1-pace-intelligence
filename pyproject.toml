@@ -36,6 +36,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+extend-exclude = ["notebooks"]
 
 [dependency-groups]
 dev = [
@@ -44,4 +45,5 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.17.0",
 ]
+
 
