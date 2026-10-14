@@ -1,12 +1,22 @@
+"""The `dpec` commands.
+
+"""
+
+# dear viewer , please ,before change anything , 
+# spend a lots of time as much as possible about f1 rules and regulations and also 
+# how the engineers work in the backend , 
+# because if you f**k up , this possible  a lots of days to fix 
+
+
+
 import typer
-# dear viewer , please ,before change anything , spend a lots of time as much as possible about f1 rules and regulations and also how the engineers work in the backend , because if you f**k up , this possible  a lots of days to fix 
+
 from telemetry_core.config import load_settings
 from telemetry_core.ingestion import fastf1_source
 from telemetry_core.ingestion.writer import is_saved, write_session
 from telemetry_core.paths import session_folder
 
 app = typer.Typer(help="Team DPEC weekend forecaster.", no_args_is_help=True)
-
 
 @app.command()
 def info(config: str = "config/dpec.yaml") -> None:

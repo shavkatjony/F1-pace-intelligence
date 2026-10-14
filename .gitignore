@@ -22,3 +22,5 @@ cache/
 
 # Mac
 .DS_Store
+
+ingest_run.txt
