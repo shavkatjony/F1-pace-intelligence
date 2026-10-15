@@ -23,4 +23,5 @@ cache/
 # Mac
 .DS_Store
 
+# Download logs from 'DPEC ingest | tee ...'
 ingest_run.txt
