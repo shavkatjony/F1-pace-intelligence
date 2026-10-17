@@ -21,4 +21,3 @@ def session_folder(
         / f"event={round_no:02d}_{slug(event_name)}"
         / f"session={slug(session_name)}"
     )
-
