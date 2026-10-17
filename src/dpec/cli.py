@@ -16,6 +16,9 @@ from telemetry_core.ingestion import fastf1_source
 from telemetry_core.ingestion.writer import is_saved, write_session
 from telemetry_core.paths import session_folder
 
+# we import here the created warehouse that runs the sql and sql (assume that there are temporary files)
+from telemetry_core import warehouse
+
 app = typer.Typer(help="Team DPEC weekend forecaster.", no_args_is_help=True)
 
 @app.command()
@@ -79,3 +82,21 @@ def ingest(
     if failed:
         raise typer.Exit(code=1)
     
+@app.command()
+def build(config: str = "config/dpec.yaml") -> None:
+    """Build the clean tables in data/warehouse.duckdb from data/raw."""
+    s = load_settings(config)
+    params = {"raw": s.paths.raw.as_posix(), "slow_lap_pct": s.slow_lap_pct}
+    counts = warehouse.build(s.paths.sql, s.paths.warehouse, params)
+    for table, rows in counts.items():
+        typer.echo(f"{table:<20} {rows:>10,} rows")
+    typer.echo(f"Saved to {s.paths.warehouse}")
+
+
+@app.command()
+def sql(query: str, config: str = "config/dpec.yaml") -> None:
+    """Run one SQL query on the warehouse and print the result."""
+    s = load_settings(config)
+    result = warehouse.query(s.paths.warehouse, query)
+    typer.echo(result.to_string(index=False, max_rows=60))
+
