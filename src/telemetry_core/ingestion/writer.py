@@ -8,12 +8,12 @@ import pandas as pd
 
 MANIFEST = "manifest.json"
 
-def parquet_safe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
 
-    '''    - timedelta columns become float seconds (the names stay the same)
+def parquet_safe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """- timedelta columns become float seconds (the names stay the same)
     - text columns with mixed types become plain strings (missing stays missing)
     Returns the new table and the list of columns that were converted to seconds.
-    '''
+    """
     out = df.copy()
     seconds_cols = []
     for col in out.columns:
@@ -23,6 +23,7 @@ def parquet_safe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
         elif out[col].dtype == object:
             out[col] = out[col].map(_as_text)
     return out, seconds_cols
+
 
 def _as_text(value) -> str | None:
     """One cell as text; missing values stay missing."""
@@ -39,6 +40,7 @@ def file_hash(path: Path) -> str:
 
 def is_saved(folder: Path) -> bool:
     return (Path(folder) / MANIFEST).exists()
+
 
 def write_session(tables: dict[str, pd.DataFrame], info: dict, folder: Path) -> dict:
     """Write every table to folder/<name>.parquet and a manifest.json. Returns the manifest."""
