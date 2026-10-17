@@ -1,25 +1,21 @@
-"""The `dpec` commands.
+"""The `dpec` commands."""
 
-"""
-
-# dear viewer , please ,before change anything , 
-# spend a lots of time as much as possible about f1 rules and regulations and also 
-# how the engineers work in the backend , 
-# because if you f**k up , this possible  a lots of days to fix 
-
-
+# dear viewer , please ,before change anything ,
+# spend a lots of time as much as possible about f1 rules and regulations and also
+# how the engineers work in the backend ,
+# because if you f**k up , this possible  a lots of days to fix
 
 import typer
 
+# we import here the created warehouse that runs the sql and sql (assume that there are temporary files)
+from telemetry_core import warehouse
 from telemetry_core.config import load_settings
 from telemetry_core.ingestion import fastf1_source
 from telemetry_core.ingestion.writer import is_saved, write_session
 from telemetry_core.paths import session_folder
 
-# we import here the created warehouse that runs the sql and sql (assume that there are temporary files)
-from telemetry_core import warehouse
-
 app = typer.Typer(help="Team DPEC weekend forecaster.", no_args_is_help=True)
+
 
 @app.command()
 def info(config: str = "config/dpec.yaml") -> None:
@@ -81,7 +77,8 @@ def ingest(
         typer.echo(f"  failed: {line}")
     if failed:
         raise typer.Exit(code=1)
-    
+
+
 @app.command()
 def build(config: str = "config/dpec.yaml") -> None:
     """Build the clean tables in data/warehouse.duckdb from data/raw."""
@@ -99,4 +96,3 @@ def sql(query: str, config: str = "config/dpec.yaml") -> None:
     s = load_settings(config)
     result = warehouse.query(s.paths.warehouse, query)
     typer.echo(result.to_string(index=False, max_rows=60))
-

@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from typing import Literal
 
@@ -16,7 +15,6 @@ class Paths(BaseModel):
     sql: Path
 
 
-
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")  # unknown keys (typos) are errors
 
@@ -24,7 +22,9 @@ class Settings(BaseModel):
     adopted_team: str = Field(min_length=1)
     seasons: list[int]
     grid_step_m: float = Field(gt=0, le=50)
-    slow_lap_pct: float = Field(gt=100, le=150)     # (gt=100: a limit of 100% or less would call almost every lap slow. le=150: above that the rule does nothing.)
+    slow_lap_pct: float = Field(
+        gt=100, le=150
+    )  # (gt=100: a limit of 100% or less would call almost every lap slow. le=150: above that the rule does nothing.)
     mode: Literal["local", "public"]
     paths: Paths
 
