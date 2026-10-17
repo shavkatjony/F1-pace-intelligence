@@ -4,10 +4,10 @@
 CREATE OR REPLACE TABLE core_sessions AS 
 WITH manifests AS (
     SELECT
-        CAST(session AS INTEGER) AS season,
+        CAST(season AS INTEGER) AS season,
         CAST(info ->> 'round' AS INTEGER) AS round,
         info ->> 'event' AS event_name,
-        info -> 'session_info' -> "Meeting" -> 'Circuit' ->> 'ShortName' AS circuit,
+        info -> 'session_info' -> 'Meeting' -> 'Circuit' ->> 'ShortName' AS circuit,
         info ->> 'session' AS session_name,
         CAST(info ->> 'session_date_utc' AS TIMESTAMP) AS session_date_utc,
         event AS event_folder,
