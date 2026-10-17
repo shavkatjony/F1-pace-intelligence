@@ -49,4 +49,3 @@ def test_same_data_gives_same_file(tmp_path):
     first = write_session({"laps": fake_laps()}, {}, tmp_path / "a")
     second = write_session({"laps": fake_laps()}, {}, tmp_path / "b")
     assert first["files"]["laps"]["sha256"] == second["files"]["laps"]["sha256"]
-    
