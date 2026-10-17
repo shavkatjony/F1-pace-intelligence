@@ -20,10 +20,31 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-def render(sql: str, param: dict) -> str:
+def render(sql: str, params: dict) -> str:
     """Fill {{name}} placeholders, the same style dbt uses."""
     for name, value in params.items():
         sql = sql.replace("{{ " + name + "}}", str(value))
     if "{{" in sql:
         raise ValueError(f"unfilled placeholder in SQL: {sql[sql.index('{{'):][:40]}")
     return sql
+
+def build(sql_dir: Path, warehouse: Path, params: dict) -> dict[str, int]:
+    '''we run every sql file in sql_dir in name order. Returns {table: rows}'''
+    files =  sorted(Path(sql_dir).glob("*.sql"))
+    if not files:
+        raise FileNotFoundError(f"no .sql files in {sql_dir}")
+    Path(warehouse).parent.mkdir(parents=True, exist_ok=True)
+    counts = {}
+    with duckdb.connect(str(warehouse)) as con:
+        for path in files:
+            con.execute(render(path.read_text(), params))
+            table = path.stem.split("_", 1)[1]  # 01_core_sessions -> core_sessions
+            counts[table] = con.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+    return counts
+
+def query(warehouse: Path, sql: str) -> pd.DataFrame:
+    """Run one read-only query and return the result as a table."""
+    with duckdb.connect(str(warehouse), read_only=True) as con:
+        return con.execute(sql).df()
+    
+#finally done with with 1000 mg  ㅜaurin
