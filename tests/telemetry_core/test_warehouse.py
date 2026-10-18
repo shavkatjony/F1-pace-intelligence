@@ -51,8 +51,12 @@ def race_laps():
         }
     )
     # columns the SQL reads but these tests don't check
-    for col in ["Sector1Time", "Sector2Time", "Sector3Time", "LapStartTime"]:
+    for col in ["Sector1Time", "Sector2Time", "Sector3Time"]:
         laps[col] = pd.to_timedelta([30.0] * n, unit="s")
+    # lap i starts at 100 * (i - 1) seconds into the session and lasts 100 s
+    laps["LapStartTime"] = pd.to_timedelta([100.0 * i for i in range(n)], unit="s")
+    laps["Time"] = laps["LapStartTime"] + pd.to_timedelta(100.0, unit="s")
+
     laps["FreshTyre"] = True
     laps["SpeedST"] = 300.0
     laps["Position"] = 1.0
