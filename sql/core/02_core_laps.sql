@@ -31,6 +31,7 @@ renamed AS (
         l.SpeedST AS speed_trap_kph,
         CAST(l.Position AS INTEGER) AS position,
         l.LapStartTime AS lap_start_session_s,
+        l.Time AS lap_end_session_s,
         l.LapStartDate AS lap_start_utc,
         coalesce(l.TrackStatus, '') AS track_status,
         l.DeletedReason AS deleted_reason,
