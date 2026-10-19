@@ -4,11 +4,14 @@
 # spend a lots of time as much as possible about f1 rules and regulations and also
 # how the engineers work in the backend ,
 # because if you f**k up , this possible  a lots of days to fix
+from pathlib import Path
 
 import typer
 
 # we import here the created warehouse that runs the sql and sql (assume that there are temporary files)
 from telemetry_core import warehouse
+from telemetry_core.alignment import distance_grid
+from telemetry_core.alignment.lap_telemetry import load_lap
 from telemetry_core.config import load_settings
 from telemetry_core.ingestion import fastf1_source
 from telemetry_core.ingestion.writer import is_saved, write_session
@@ -96,3 +99,79 @@ def sql(query: str, config: str = "config/dpec.yaml") -> None:
     s = load_settings(config)
     result = warehouse.query(s.paths.warehouse, query)
     typer.echo(result.to_string(index=False, max_rows=60))
+
+
+@app.command()
+def compare(
+    session_key: str,
+    driver: str,
+    lap: int,
+    other_driver: str,
+    other_lap: int,
+    other_session: str | None = typer.Option(None, help="Default: the same session"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """Put two laps on the distance grid, check the corners line up, and save a chart."""
+    import matplotlib
+
+    matplotlib.use("Agg")  # save to a file, no window
+    import matplotlib.pyplot as plt
+
+    s = load_settings(config)
+    other_session = other_session or session_key
+    try:
+        tel_a, info_a = load_lap(s.paths.warehouse, s.paths.raw, session_key, driver, lap)
+        tel_b, info_b = load_lap(s.paths.warehouse, s.paths.raw, other_session, other_driver, other_lap)
+    except ValueError as error:
+        typer.echo(f"Can't compare: {error}")
+        raise typer.Exit(code=1) from None
+
+    ref = distance_grid.to_grid(
+        tel_a, s.grid_step_m, info_a["lap_start_session_s"], info_a["lap_end_session_s"]
+    )
+    lap_length = ref["distance_m"].iloc[-1]
+    other = distance_grid.to_grid(
+        tel_b,
+        s.grid_step_m,
+        info_b["lap_start_session_s"],
+        info_b["lap_end_session_s"],
+        lap_length_m=lap_length,
+    )
+    both = distance_grid.delta(ref, other)
+
+    name_a, name_b = f"{driver.upper()} lap {lap}", f"{other_driver.upper()} lap {other_lap}"
+    for name, info, grid in [(name_a, info_a, ref), (name_b, info_b, other)]:
+        typer.echo(
+            f"{name:<12} official {info['lap_time_s']:.3f} s | on grid {grid['time_s'].iloc[-1]:.3f} s"
+            f" | {info['lap_reason']}"
+        )
+    typer.echo(f"Lap length (reference): {lap_length:.0f} m, {len(both)} grid points")
+
+    corners_a = distance_grid.apexes(ref)
+    corners_b = distance_grid.apexes(other)
+    typer.echo("\nCorner  apex A (m)  apex B (m)  gap (m)  min speed A  min speed B")
+    for i, row in corners_a.iterrows():
+        nearest = corners_b.iloc[(corners_b["distance_m"] - row["distance_m"]).abs().argmin()]
+        gap = nearest["distance_m"] - row["distance_m"]
+        typer.echo(
+            f"{i + 1:>6}  {row['distance_m']:>10.0f}  {nearest['distance_m']:>10.0f}  {gap:>7.0f}"
+            f"  {row['speed_kph']:>11.0f}  {nearest['speed_kph']:>11.0f}"
+        )
+    typer.echo(f"\nGap at the line: {both['delta_s'].iloc[-1]:+.3f} s ({name_b} vs {name_a})")
+
+    fig, (top, bottom) = plt.subplots(2, 1, figsize=(12, 6), sharex=True, height_ratios=[2, 1])
+    top.plot(both["distance_m"], both["speed_kph_ref"], label=name_a)
+    top.plot(both["distance_m"], both["speed_kph_other"], label=name_b)
+    for d in corners_a["distance_m"]:
+        top.axvline(d, color="grey", lw=0.5, ls=":")
+    top.set_ylabel("speed (km/h)")
+    top.legend()
+    bottom.plot(both["distance_m"], both["delta_s"], color="black")
+    bottom.axhline(0, color="grey", lw=0.5)
+    bottom.set_ylabel(f"gap (s), + = {other_driver.upper()} behind")
+    bottom.set_xlabel("distance from the start line (m)")
+    fig.suptitle(f"{session_key} {name_a} vs {other_session} {name_b}")
+    out = Path("reports/figures") / f"{session_key}_{driver}{lap}_vs_{other_driver}{other_lap}.png"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out, dpi=120, bbox_inches="tight")
+    typer.echo(f"Chart saved: {out}")

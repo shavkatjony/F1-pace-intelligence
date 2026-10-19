@@ -25,3 +25,6 @@ cache/
 
 # Download logs from 'DPEC ingest | tee ...'
 ingest_run.txt
+
+# Charts made by `dpec compare` (rebuildable)
+reports/figures/
