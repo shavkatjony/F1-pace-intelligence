@@ -5,9 +5,11 @@
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
+from telemetry_core.alignment.lap_telemetry import load_lap
 from telemetry_core.ingestion.writer import write_session
 from telemetry_core.paths import session_folder
 from telemetry_core.warehouse import build, query, render
@@ -15,7 +17,7 @@ from telemetry_core.warehouse import build, query, render
 SQL_DIR = Path("sql/core")
 
 
-def save(raw, season, rnd, session_name, laps):
+def save(raw, season, rnd, session_name, laps, **other_tables):
     info = {
         "season": season,
         "round": rnd,
@@ -25,7 +27,7 @@ def save(raw, season, rnd, session_name, laps):
         "session_info": {"Meeting": {"Circuit": {"ShortName": "Testville"}}},
     }
     folder = session_folder(raw, "fastf1", season, rnd, "Test Grand Prix", session_name)
-    write_session({"laps": laps}, info, folder)
+    write_session({"laps": laps, **other_tables}, info, folder)
 
 
 def race_laps():
@@ -138,3 +140,30 @@ def test_render_fills_placeholders_with_optional_whitespace():
     assert render("SELECT '{{ raw }}', {{slow_lap_pct}}", {"raw": "/data", "slow_lap_pct": 107}) == (
         "SELECT '/data', 107"
     )
+
+def test_load_lap_reads_only_that_lap(tmp_path):
+    raw = tmp_path / "raw"
+    t = np.arange(0.0, 900.0, 0.25)  # car_data for the whole session, 4 samples a second
+    car_data = pd.DataFrame(
+        {
+            "SessionTime": pd.to_timedelta(t, unit="s"),
+            "Speed": 200.0,
+            "Throttle": 100.0,
+            "RPM": 11000.0,
+            "nGear": 7,
+            "Brake": False,
+            "DRS": 0,
+            "DriverNumber": "1",
+        }
+    )
+    save(raw, 2024, 1, "Race", race_laps(), car_data=car_data)
+    wh = tmp_path / "wh.duckdb"
+    build(SQL_DIR, wh, {"raw": raw.as_posix(), "slow_lap_pct": 107})
+
+    tel, info = load_lap(wh, raw, "2024_01_R", "ver", 3)  # lap 3 = 200 s to 300 s
+    assert info["lap_start_session_s"] == 200.0
+    assert tel["time_s"].min() >= 199.0  # one second of margin on each side
+    assert tel["time_s"].max() <= 301.0
+    with pytest.raises(ValueError, match="no lap 99"):
+        load_lap(wh, raw, "2024_01_R", "VER", 99)
+        
