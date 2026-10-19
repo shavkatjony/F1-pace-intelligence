@@ -13,3 +13,6 @@ paths:
   raw: data/raw
   warehouse: data/warehouse.duckdb
   sql: sql/core
+
+
+  log: data/ingest_log.csv

@@ -13,6 +13,7 @@ class Paths(BaseModel):
     raw: Path
     warehouse: Path
     sql: Path
+    log: Path
 
 
 class Settings(BaseModel):
