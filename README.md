@@ -1,169 +1,137 @@
-# DPEC — F1 Race-Weekend Performance & Decision Engine
-
-> **Forecast race performance from real F1 telemetry, quantify uncertainty, and turn practice data into evidence-based race decisions.**
-
-**Status:** 🚧 Planning / Development not started yet
-
-DPEC is a personal **Data Science, ML, Analytics, and AI Engineering** project built around a practical F1 problem:
-
-> **After each practice session, what can we reliably infer about qualifying and race performance — and what should that imply for the race?**
-
-It is designed around **messy public telemetry**, incomplete information, forecasting under uncertainty, reproducible evaluation, and decision support.
-
+# F1 Pace Intelligence · Team DPEC Weekend Forecaster
+ 
+> After each practice session, how fast will each car really be on Sunday, how sure are we, and what should the team do about its tyres and pit stops?
+ 
+DPEC is a solo end-to-end project in data engineering, analytics, machine learning and AI, built on public Formula 1 timing data (2022–2026). It treats the project like a small race-team engineering office: one data foundation, clear rules for what counts as "real pace", forecasts saved **before** each session, and an honest score **after** the race.
+ 
+**Status:** Phase A (data foundation) is almost done. The forecaster (Phase C) has not started yet. Everything below marked ✅ runs today.
+ 
+![VER pole lap vs LEC's best lap, Bahrain 2024 qualifying, on a 5 m distance grid](docs/images/bahrain-pole.png)
+ 
+*Bahrain 2024 qualifying: Verstappen's pole lap against Leclerc's best Q2 lap, aligned metre by metre. Top: speed. Bottom: the running gap. The grid reproduces the official lap times to the millisecond (89.179 s vs 89.165 s), and every corner lines up within 10 m.*
+ 
 ---
-
-## What DPEC Does
-
+ 
+## What works today
+ 
+| | Command | What it does |
+|---|---|---|
+| ✅ | `dpec ingest` | Downloads every session of every season in the config from FastF1, once, into immutable Parquet files with a manifest (row counts + SHA-256). Re-runs only fetch new sessions; rate limits stop cleanly and resume |
+| ✅ | `dpec build` | Rebuilds the DuckDB warehouse from plain SQL files: sessions, laps with quality flags, official results, and a file inventory |
+| ✅ | `dpec sql "…"` | Runs any read-only SQL query on the warehouse |
+| ✅ | `dpec compare` | Puts two laps on a 5 m distance grid and shows where one gains or loses time, corner by corner |
+ 
+### The data, in numbers
+ 
+| | |
+|---|---|
+| Seasons | 2022–2026 (ground-effect era, plus the 2026 rules) |
+| Sessions saved | 545 (practice, qualifying, sprint, race) |
+| Laps | 297,724, of which 163,599 (55%) are clean race pace |
+| Raw Parquet on disk | 4.1 GB |
+| Full rebuild of the warehouse | seconds |
+ 
+---
+ 
+## How it works
+ 
 ```text
-Real F1 Data
-     ↓
-Data Quality & Alignment
-     ↓
-Analytics
-     ↓
-Performance Forecast
-     ↓
-Uncertainty
-     ↓
-Tyre / Stint Scenarios
-     ↓
-Decision Support
-     ↓
-Race
-     ↓
-Forecast vs Reality
-     ↓
-Debrief
+FastF1 (official F1 timing feed)
+      │  dpec ingest: only file that talks to the internet
+      ▼
+data/raw/fastf1/season=…/event=…/session=…/*.parquet + manifest.json   (never edited)
+      │  dpec build: plain SQL run by DuckDB
+      ▼
+core_sessions · core_laps · core_results · core_files      (data/warehouse.duckdb)
+      │
+      ├── distance grid → dpec compare               ✅
+      ├── analytics: long runs, tyre stints, track evolution     (Phase B)
+      ├── forecaster: one shared model for all tracks and years (Phase C)
+      └── decisions, debrief, AI assistant                       (Phases C–D)
 ```
-
-
-## Example Questions
-
-### Performance
-
-> What is our expected race pace after FP2?
-
-> Which cars appear strongest over long runs?
-
-> How certain is that ranking?
-
-### Tyres
-
-> How quickly is the medium tyre degrading?
-
-> How many competitive laps may remain in this stint?
-
-> When does degradation appear to increase sharply?
-
-### Strategy
-
-> What pit window is currently supported by the evidence?
-
-> What changes if degradation is 20% worse than expected?
-
-> Are an early and late pit actually distinguishable given current uncertainty?
-
-### Debrief
-
-> Why was our race-pace forecast wrong?
-
-> How much of the gap came from tyres, track evolution, traffic, or car/driver performance?
-
-### AI
-
-> Why is confidence in the race forecast low?
-
-> What evidence supports the current strategy scenario?
-
-> Which assumptions could invalidate the recommendation?
-
+ 
+### When is a lap "real pace"?
+ 
+Every lap gets exactly one reason code: `clean`, or the **first** rule it breaks, in this order:
+ 
+`no_time` → `generated` → `in_lap` → `out_lap` → `lap_one` → `red_flag` → `safety_car` → `vsc` → `yellow` → `deleted` → `inaccurate` → `wet_tyre` → `slow`
+ 
+`slow` means slower than 107% of the session's median clean lap. That limit was picked from the data: in races it flags 395 laps at 107%, but 3,445 at 103%, which would throw away the old-tyre laps the tyre model needs. Every rule is also kept as its own yes/no column, so later models can be stricter or looser.
+ 
+### Checks that make the data trustworthy
+ 
+- The grain is tested: one row per driver, per lap, per session, with no duplicates.
+- Results add up: every race hands out 101 or 102 points (102 with the fastest-lap point until 2024) and every sprint 36.
+- Penalties decided after the flag are in: for example, Russell's win at Spa 2024 shows as a disqualification.
+- An empty table from FastF1 is listed, not hidden (1 of about 3,800 saved tables).
+- 35 unit tests run in CI on every push; none of them need the internet.
 ---
-
-
+ 
+## Design decisions
+ 
+Short records of what was decided, why, and what was rejected: [`docs/decisions/`](docs/decisions/)
+ 
+| # | Decision |
+|---|---|
+| 0001 | Team DPEC adopts Mercedes's two cars |
+| 0002 | Parquet files + DuckDB, no database server |
+| 0003 | Clean tables and the ordered lap rules |
+| 0004 | Distance grid: computed on demand, not stored |
+| 0005 | Results come from FastF1 (which already carries the official classification); no second adapter |
+ 
 ---
-
-
-## Technical Focus
-
-The project is intended to demonstrate:
-
-**Python · SQL · Statistics · Time Series · ML · Data Engineering · Forecasting · Uncertainty · Model Evaluation · APIs · Testing · AI Tool Use**
-
-Planned stack:
-
+ 
+## Quick start
+ 
+Needs [uv](https://docs.astral.sh/uv/) and Python 3.12.
+ 
+```bash
+git clone https://github.com/shavkatjony/F1-pace-intelligence.git
+cd F1-pace-intelligence
+make setup                 # install everything with uv
+make test                  # 35 tests, no internet needed
+make data                  # first run downloads 2022–2026: hours, about 40 GB of FastF1 cache
+uv run dpec compare 2024_01_Q VER 16 LEC 12
+```
+ 
+Settings (seasons, our team, the slow-lap limit, the grid step, paths) live in [`config/dpec.yaml`](config/dpec.yaml). Nothing is hard-coded.
+ 
+---
+ 
+## Roadmap
+ 
+| Phase | Goal | State |
+|---|---|---|
+| **A · Data** | One command rebuilds clean F1 data for 2022–2026 | 🔶 ingest ✅, clean laps ✅, distance grid ✅, results + download log ✅, final checks next |
+| **B · History** | Every "what happened" question answered; which practice signals predict Sunday | ⬜ |
+| **C · Forecast** | Race pace and tyre wear with honest ranges, saved publicly before each session, scored after | ⬜ |
+| **D · Explain** | Where the time went, plus an AI race engineer that says "not public" when it doesn't know | ⬜ |
+| **E · Public** | Live app and write-up | ⬜ |
+ 
+How the forecaster will be judged: simple baselines first, walk-forward backtests (never random lap splits, which leak the future), calibrated 80% ranges, and a public record of every forecast.
+ 
+---
+ 
+## What public data can't tell us
+ 
+Fuel load, car setup, tyre temperatures and pressures, and in 2026 the battery (ERS) and active-aero state are not public. Where the project estimates their effect, it is labelled **estimated**, never shown as measured.
+ 
+---
+ 
+## Project layout
+ 
 ```text
-Python
-DuckDB
-Parquet
-dbt
-FastAPI
-pytest
-GitHub Actions
-MLflow
-FastF1
-Jolpica
+config/dpec.yaml              all settings
+sql/core/                     the SQL that builds the warehouse
+src/telemetry_core/           reusable data layer: ingestion, warehouse, alignment
+src/dpec/cli.py               the dpec commands
+tests/                        unit tests (fake data, no internet)
+docs/decisions/               decision records
+web/prototype/                look-only prototype of the pit-wall app
 ```
-
+ 
 ---
-
-## Modelling
-
-The forecasting system will be evaluated with:
-
-- simple baselines first
-- walk-forward validation
-- race-weekend/time-based splits
-- uncertainty intervals
-- calibration checks
-- cross-circuit evaluation
-- in-season updating
-
-No random lap-level splitting that causes future information leakage.
-
----
-
-## Public-Data Constraint
-
-DPEC only uses information that is actually available.
-
-Hidden variables such as exact:
-
-- fuel load
-- engine mode
-- ERS state
-- setup details
-- private tyre measurements
-
-are **not presented as observed data**.
-
-Where their effects are estimated, they are explicitly labelled as **estimated**.
-
----
-
-
-
-## Project Philosophy
-
-> **The goal is not to build the biggest F1 dashboard.**
-
-The goal is to build a small, reproducible engineering system that can answer a difficult question, make a prediction before the answer is known, and prove afterward whether it worked.
-
----
-
-## Current Status
-
-🚧 **Planning**
-
-The architecture, scope, modelling direction, evaluation methodology, and decision-support design are currently being defined.
-
-The project will be built incrementally, with each stage producing a testable result before moving to the next stage.
-
----
-
-## Author
-
-**Shavkatjon Yuldashev**
-
-Personal research project focused on:
-
-**Data Science · ML · Analytics · AI Engineering · Motorsport**
+ 
+**Author:** Shavkatjon Yuldashev · Data Science, ML, Analytics and AI Engineering · Korea
+ 
+ 
