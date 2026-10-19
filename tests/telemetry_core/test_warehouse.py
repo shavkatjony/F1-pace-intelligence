@@ -27,7 +27,30 @@ def save(raw, season, rnd, session_name, laps, **other_tables):
         "session_info": {"Meeting": {"Circuit": {"ShortName": "Testville"}}},
     }
     folder = session_folder(raw, "fastf1", season, rnd, "Test Grand Prix", session_name)
-    write_session({"laps": laps, **other_tables}, info, folder)
+    tables = {"laps": laps, "results": fake_results(), **other_tables}
+    write_session(tables, info, folder)
+
+def fake_results():
+    """Two drivers: VER wins from pole, HAM is disqualified after the race."""
+    return pd.DataFrame(
+        {
+            "Abbreviation": ["VER", "HAM"],
+            "DriverId": ["max_verstappen", "hamilton"],
+            "DriverNumber": ["1", "44"],
+            "FullName": ["Max Verstappen", "Lewis Hamilton"],
+            "TeamName": ["Red Bull Racing", "Mercedes"],
+            "TeamId": ["red_bull", "mercedes"],
+            "GridPosition": [1.0, 2.0],
+            "Position": [1.0, 2.0],
+            "ClassifiedPosition": ["1", "D"],
+            "Status": ["Finished", "Disqualified"],
+            "Points": [25.0, 0.0],
+            "Laps": [9.0, 9.0],
+            "Q1": [90.0, 90.5],
+            "Q2": [89.5, 90.0],
+            "Q3": [89.0, 89.6],
+        }
+    )
 
 
 def race_laps():
@@ -81,7 +104,13 @@ def wh(tmp_path):
 
 def test_row_counts(wh):
     _, counts = wh
-    assert counts == {"core_sessions": 4, "core_laps": 9 + 3 + 2 + 2}
+    assert counts == {
+        "core_sessions": 4,
+        "core_laps": 9 + 3 + 2 + 2,
+        "core_results": 4 * 2,  # 4 sessions x 2 drivers
+        "core_files": 4 * 2,  # 4 sessions x (laps, results)
+    }
+
 
 
 def test_session_keys_and_types(wh):
@@ -167,3 +196,24 @@ def test_load_lap_reads_only_that_lap(tmp_path):
     with pytest.raises(ValueError, match="no lap 99"):
         load_lap(wh, raw, "2024_01_R", "VER", 99)
         
+# ==============================================================
+# for the new 2 tests 
+# =============================================================
+def test_results_keep_the_official_classification(wh):
+    path, _ = wh
+    r = query(path, "SELECT * FROM core_results WHERE session_key = '2024_01_R'")
+    assert r["driver_id"].tolist() == ["max_verstappen", "hamilton"]
+    assert r["classified"].tolist() == ["1", "D"]
+    assert r["points"].tolist() == [25.0, 0.0]
+
+
+def test_files_table_lists_every_saved_table(wh):
+    path, _ = wh
+    f = query(path, "SELECT table_name, n_rows, is_empty FROM core_files WHERE session_key = '2024_01_R'")
+    assert f["table_name"].tolist() == ["laps", "results"]
+    assert f["n_rows"].tolist() == [9, 2]
+    assert not f["is_empty"].any()
+
+# =============================================================
+# test functions ends here 
+# =============================================================
