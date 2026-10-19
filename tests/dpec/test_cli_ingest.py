@@ -26,6 +26,7 @@ def make_args(monkeypatch, tmp_path, fetch=fake_fetch):
     config = yaml.safe_load(Path("config/dpec.yaml").read_text())
     config["seasons"] = [2024, 2025]
     config["paths"]["raw"] = str(tmp_path / "raw")
+    config["paths"]["log"] = str(tmp_path / "ingest_log.csv")
     path = tmp_path / "dpec.yaml"
     path.write_text(yaml.safe_dump(config))
     return ["ingest", "--config", str(path)]
@@ -85,3 +86,17 @@ def test_rate_limit_stops_and_keeps_saved(monkeypatch, tmp_path):
     assert "rate limit" in result.output
     saved = list((tmp_path / "raw").rglob("manifest.json"))
     assert len(saved) == 3
+
+def test_every_attempt_is_logged(monkeypatch, tmp_path):
+    def flaky_fetch(season, round_no, session_name):
+        if round_no == 2 and session_name == "Race":
+            raise ValueError("no data")
+        return fake_fetch(season, round_no, session_name)
+
+    args = make_args(monkeypatch, tmp_path, flaky_fetch) + ["--season", "2024"]
+    runner.invoke(app, args)
+    runner.invoke(app, args)  # second run: everything saved is skipped, only the failure retries
+    log = pd.read_csv(tmp_path / "ingest_log.csv")
+    assert log["status"].tolist() == ["ok", "ok", "ok", "failed", "failed"]
+    assert log.loc[log["status"] == "failed", "error"].unique().tolist() == ["no data"]
+    assert log.loc[0, "rows"] == 1  # the fake laps table has one row

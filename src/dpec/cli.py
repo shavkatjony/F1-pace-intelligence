@@ -4,6 +4,8 @@
 # spend a lots of time as much as possible about f1 rules and regulations and also
 # how the engineers work in the backend ,
 # because if you f**k up , this possible  a lots of days to fix
+import time
+
 from pathlib import Path
 
 import typer
@@ -14,6 +16,7 @@ from telemetry_core.alignment import distance_grid
 from telemetry_core.alignment.lap_telemetry import load_lap
 from telemetry_core.config import load_settings
 from telemetry_core.ingestion import fastf1_source
+from telemetry_core.ingestion.log import log_attempt
 from telemetry_core.ingestion.writer import is_saved, write_session
 from telemetry_core.paths import session_folder
 
@@ -58,17 +61,24 @@ def ingest(
                     counts["skipped"] += 1
                     typer.echo(f"  {name:<20} skipped (already saved)")
                     continue
+                where = {"source": "fastf1", "season": year, "round": rnd, "session": name}
+                started = time.perf_counter()
                 try:
                     tables, meta = fastf1_source.fetch_session(year, rnd, name)
                 except fastf1_source.RateLimitError:
+                    log_attempt(s.paths.log, **where, status="rate_limited")
                     typer.echo("FastF1 rate limit reached. Run the same command again later;")
                     typer.echo("everything saved so far is kept and will be skipped.")
                     raise typer.Exit(code=1) from None
                 except Exception as error:  # noqa: BLE001 - one bad session must not stop the rest
+                    log_attempt(s.paths.log, **where, status="failed", error=str(error))
                     failed.append(f"{year} round {rnd} {name}: {error}")
                     typer.echo(f"  {name:<20} FAILED: {error}")
                     continue
                 manifest = write_session(tables, meta, folder)
+                total_rows = sum(v["rows"] for v in manifest["files"].values())
+                seconds = round(time.perf_counter() - started, 1)
+                log_attempt(s.paths.log, **where, status="ok", rows=total_rows, seconds=seconds)
                 counts["saved"] += 1
                 rows = ", ".join(f"{k} {v['rows']}" for k, v in manifest["files"].items())
                 typer.echo(f"  {name:<20} saved: {rows}")
