@@ -4,7 +4,6 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
 class Paths(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -13,7 +12,9 @@ class Paths(BaseModel):
     raw: Path
     warehouse: Path
     sql: Path
+    seeds: Path
     log: Path
+    dictionary: Path
 
 
 class Settings(BaseModel):

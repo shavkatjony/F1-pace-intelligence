@@ -20,6 +20,15 @@ from telemetry_core.ingestion.writer import is_saved, write_session
 from telemetry_core.paths import session_folder
 
 app = typer.Typer(help="Team DPEC weekend forecaster.", no_args_is_help=True)
+LAYERS = ["core"]  # folders in sql/, built in this order
+
+def sql_params(s) -> dict:
+    """Values for the {{ }} placeholders in the SQL files."""
+    return {
+        "raw": s.paths.raw.as_posix(),
+        "seeds": s.paths.seeds.as_posix(),
+        "slow_lap_pct": s.slow_lap_pct,
+    }
 
 
 @app.command()
@@ -95,12 +104,33 @@ def ingest(
 def build(config: str = "config/dpec.yaml") -> None:
     """Build the clean tables in data/warehouse.duckdb from data/raw."""
     s = load_settings(config)
-    params = {"raw": s.paths.raw.as_posix(), "slow_lap_pct": s.slow_lap_pct}
-    counts = warehouse.build(s.paths.sql, s.paths.warehouse, params)
-    for table, rows in counts.items():
-        typer.echo(f"{table:<20} {rows:>10,} rows")
+    for layer in LAYERS:
+        counts = warehouse.build(s.paths.sql / layer, s.paths.warehouse, sql_params(s))
+        for table, rows in counts.items():
+            typer.echo(f"{table:<24} {rows:>10,} rows")
     typer.echo(f"Saved to {s.paths.warehouse}")
 
+def check(config: str = "config/dpec.yaml") -> None:
+    """Run the data checks in sql/checks and the data dictionary check. Fails if any fails."""
+    s = load_settings(config)
+    results = warehouse.run_checks(s.paths.sql / "checks", s.paths.warehouse, sql_params(s))
+    missing = warehouse.undocumented_columns(s.paths.warehouse, s.paths.dictionary)
+    results.append(
+        {
+            "name": "data_dictionary_covers_every_column",
+            "n_bad": len(missing),
+            "sample": "\n".join(missing[:5]),
+        }
+    )
+    for r in results:
+        mark = "PASS" if r["n_bad"] == 0 else f"FAIL ({r['n_bad']} rows)"
+        typer.echo(f"{mark:<16} {r['name']}")
+        if r["n_bad"]:
+            typer.echo(f"{r['sample']}\n")
+    failed = sum(r["n_bad"] > 0 for r in results)
+    typer.echo(f"\n{len(results) - failed} passed, {failed} failed")
+    if failed:
+        raise typer.Exit(code=1)
 
 @app.command()
 def sql(query: str, config: str = "config/dpec.yaml") -> None:
