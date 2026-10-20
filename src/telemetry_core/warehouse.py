@@ -47,6 +47,32 @@ def build(sql_dir: Path, warehouse: Path, params: dict) -> dict[str, int]:
             counts[table] = con.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
     return counts
 
+def run_checks(checks_dir: Path, warehouse: Path, params: dict) -> list[dict]:
+    """Run every check in checks_dir. A check is a query that returns the rows breaking a rule,
+    so an empty result means the check passed."""
+    results = []
+    with duckdb.connect(str(warehouse), read_only=True) as con:
+        for path in sorted(Path(checks_dir).glob("*.sql")):
+            bad = con.execute(render(path.read_text(), params)).df()
+            results.append({"name": path.stem, "n_bad": len(bad), "sample": bad.head(5)})
+    return results
+
+
+def undocumented_columns(warehouse: Path, dictionary: Path) -> list[str]:
+    """Columns in the warehouse that the data dictionary doesn't describe, as 'table.column'.
+    The dictionary has a '## table_name' heading per table and a '| `column` |' row per column."""
+    documented, table = set(), None
+    for line in Path(dictionary).read_text().splitlines():
+        if line.startswith("## "):
+            table = line[3:].strip().strip("`")
+        elif table and line.startswith("| `"):
+            documented.add(f"{table}.{line.split('`')[1]}")
+    with duckdb.connect(str(warehouse), read_only=True) as con:
+        columns = con.execute(
+            "SELECT table_name || '.' || column_name FROM information_schema.columns"
+        ).fetchall()
+    return sorted(c for (c,) in columns if c not in documented)
+
 
 def query(warehouse: Path, sql: str) -> pd.DataFrame:
     """Run one read-only query and return the result as a table."""
