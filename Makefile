@@ -1,4 +1,4 @@
-.PHONY: setup test lint format data build run
+.PHONY: setup test lint format data build check run
 
 setup:
 	uv sync
@@ -15,9 +15,13 @@ format:
 data:
 	uv run dpec ingest
 	uv run dpec build
+	uv run dpec check
 
 build:
 	uv run dpec build
+
+check:
+	uv run dpec check
 
 run:
 	@echo "not yet: built in step B4"
