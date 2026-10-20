@@ -18,7 +18,7 @@ renamed AS (
         s.session_type,
         l.Driver AS driver_code,
         l.DriverNumber AS car_number,
-        l.Team AS team,
+        nullif(l.Team, '') AS team_raw,  -- empty in 2026 rounds 5 and 7 FP1, filled below
         CAST(l.LapNumber AS INTEGER) AS lap_number,
         CAST(l.Stint AS INTEGER) AS stint,
         l.Compound AS compound,
@@ -48,6 +48,17 @@ renamed AS (
         AND s.session_folder = l.session
 ),
 
+teams_filled AS (
+    SELECT
+        * EXCLUDE (team_raw),
+        coalesce(
+            team_raw,
+            -- 1. the same driver's team in another session of the same weekend
+            max(team_raw) OVER (PARTITION BY season, round, driver_code)
+        ) AS team
+    FROM renamed
+),
+
 flagged AS (
     SELECT
         *,
@@ -57,7 +68,7 @@ flagged AS (
         regexp_matches(track_status, '[67]') AS under_vsc,
         contains(track_status, '2') AS under_yellow,
         compound IN ('INTERMEDIATE', 'WET') AS on_wet_tyre
-    FROM renamed
+    FROM teams_filled
 ),
 
 first_pass AS (
