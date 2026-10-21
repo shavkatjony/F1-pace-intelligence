@@ -12,12 +12,17 @@ import pytest
 from telemetry_core.alignment.lap_telemetry import load_lap
 from telemetry_core.ingestion.writer import write_session
 from telemetry_core.paths import session_folder
-from telemetry_core.warehouse import build, query, render
+from telemetry_core.warehouse import build, query, render, run_checks, undocumented_columns
 
+# Existing directory definition
 SQL_DIR = Path("sql/core")
+# New params helper
+CHECKS_DIR = Path("sql/checks")
 
+def params(raw):
+    return {"raw": raw.as_posix(), "seeds": "seeds", "slow_lap_pct": 107}
 
-def save(raw, season, rnd, session_name, laps, **other_tables):
+def save(raw, season, rnd, session_name, laps, results=None, **other_tables):
     info = {
         "season": season,
         "round": rnd,
@@ -27,7 +32,8 @@ def save(raw, season, rnd, session_name, laps, **other_tables):
         "session_info": {"Meeting": {"Circuit": {"ShortName": "Testville"}}},
     }
     folder = session_folder(raw, "fastf1", season, rnd, "Test Grand Prix", session_name)
-    tables = {"laps": laps, "results": fake_results(), **other_tables}
+    results = fake_results() if results is None else results
+    tables = {"laps": laps, "results": results, **other_tables}
     write_session(tables, info, folder)
 
 def fake_results():
@@ -98,7 +104,7 @@ def wh(tmp_path):
     save(raw, 2023, 6, "Sprint Shootout", race_laps().head(2))
     save(raw, 2023, 6, "Sprint", race_laps().head(2))
     path = tmp_path / "wh.duckdb"
-    counts = build(SQL_DIR, path, {"raw": raw.as_posix(), "slow_lap_pct": 107})
+    counts = build(SQL_DIR, path, params(raw))
     return path, counts
 
 
@@ -109,6 +115,8 @@ def test_row_counts(wh):
         "core_laps": 9 + 3 + 2 + 2,
         "core_results": 4 * 2,  # 4 sessions x 2 drivers
         "core_files": 4 * 2,  # 4 sessions x (laps, results)
+        "dim_drivers": 2 + 2,  # (VER, HAM) in 2023 and in 2024
+        "dim_teams": 2, # Red Bull Racing, Mercedes
     }
 
 
@@ -157,7 +165,7 @@ def test_unknown_session_name_fails(tmp_path):
     raw = tmp_path / "raw"
     save(raw, 2024, 1, "Practice 9", race_laps())
     with pytest.raises(Exception, match="unknown session name"):
-        build(SQL_DIR, tmp_path / "wh.duckdb", {"raw": raw.as_posix(), "slow_lap_pct": 107})
+        build(SQL_DIR, tmp_path / "wh.duckdb", params(raw))
 
 
 def test_render_refuses_missing_values():
@@ -187,7 +195,7 @@ def test_load_lap_reads_only_that_lap(tmp_path):
     )
     save(raw, 2024, 1, "Race", race_laps(), car_data=car_data)
     wh = tmp_path / "wh.duckdb"
-    build(SQL_DIR, wh, {"raw": raw.as_posix(), "slow_lap_pct": 107})
+    build(SQL_DIR, wh, params(raw))
 
     tel, info = load_lap(wh, raw, "2024_01_R", "ver", 3)  # lap 3 = 200 s to 300 s
     assert info["lap_start_session_s"] == 200.0
@@ -214,6 +222,72 @@ def test_files_table_lists_every_saved_table(wh):
     assert f["n_rows"].tolist() == [9, 2]
     assert not f["is_empty"].any()
 
+# =============================================================
+# these functions are created after 2 table is addded these are dim drivers and dim teams , for testing , chao
+# =============================================================
+
+# ==============================================================
+# Lesson 7: ID maps and checks
+# ==============================================================
+def test_missing_driver_id_is_borrowed_from_the_same_season(tmp_path):
+    raw = tmp_path / "raw"
+    no_ids = fake_results().assign(DriverId=["", "nan"])  # like sprint qualifying
+    save(raw, 2024, 5, "Sprint Qualifying", race_laps().head(2), results=no_ids)
+    save(raw, 2024, 5, "Sprint", race_laps().head(2))
+    wh = tmp_path / "wh.duckdb"
+    build(SQL_DIR, wh, params(raw))
+    r = query(wh, "SELECT driver_id FROM core_results WHERE session_key = '2024_05_SQ'")
+    assert r["driver_id"].tolist() == ["max_verstappen", "hamilton"]
+
+
+def test_empty_team_is_filled_from_the_same_weekend(tmp_path):
+    raw = tmp_path / "raw"
+    save(raw, 2026, 7, "Practice 1", race_laps().assign(Team=""))
+    save(raw, 2026, 7, "Practice 2", race_laps())
+    wh = tmp_path / "wh.duckdb"
+    build(SQL_DIR, wh, params(raw))
+    teams = query(wh, "SELECT DISTINCT team FROM core_laps WHERE session_key = '2026_07_FP1'")
+    assert teams["team"].tolist() == ["Red Bull Racing"]
+
+
+def test_stand_in_team_comes_from_the_same_car_number(tmp_path):
+    raw = tmp_path / "raw"
+    rookie = race_laps().assign(Driver="IWA", DriverNumber="36")
+    save(raw, 2026, 7, "Practice 1", rookie.assign(Team=""))
+    save(raw, 2026, 13, "Practice 1", rookie)  # same rookie, same number, team known
+    wh = tmp_path / "wh.duckdb"
+    build(SQL_DIR, wh, params(raw))
+    teams = query(wh, "SELECT DISTINCT team FROM core_laps WHERE session_key = '2026_07_FP1'")
+    assert teams["team"].tolist() == ["Red Bull Racing"]
+
+
+def test_checks_pass_on_good_data(wh):
+    path, _ = wh
+    raw = path.parent / "raw"
+    failed = [c["name"] for c in run_checks(CHECKS_DIR, path, params(raw)) if c["n_bad"]]
+    # the fake races have 25 points, not 101; every other check passes
+    assert failed == ["06_points_add_up"]
+
+
+def test_a_check_returns_the_bad_rows(wh, tmp_path):
+    path, _ = wh
+    (tmp_path / "checks").mkdir()
+    (tmp_path / "checks" / "01_no_slow_laps.sql").write_text(
+        "SELECT * FROM core_laps WHERE lap_reason = 'slow'"
+    )
+    [result] = run_checks(tmp_path / "checks", path, {})
+    assert result["n_bad"] == 1
+
+
+def test_dictionary_check_lists_missing_columns(wh, tmp_path):
+    path, _ = wh
+    dictionary = tmp_path / "dict.md"
+    dictionary.write_text("## core_sessions\n\n| column | meaning |\n|---|---|\n| `season` | year |\n")
+    missing = undocumented_columns(path, dictionary)
+    assert "core_sessions.season" not in missing
+    assert "core_sessions.round" in missing
+    assert "core_laps.lap_reason" in missing
+    
 # =============================================================
 # test functions ends here 
 # =============================================================
