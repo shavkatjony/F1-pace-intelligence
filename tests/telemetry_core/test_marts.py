@@ -1,0 +1,76 @@
+"""Mart tests: build core + marts on the fake weekend from test_warehouse."""
+
+from pathlib import Path
+
+import pandas as pd
+import pytest
+from test_warehouse import fake_results, params, race_laps, save
+
+from telemetry_core.warehouse import build, query, run_checks
+
+
+def fake_weather(minutes=20, rain_from=None):
+    rain = [rain_from is not None and m >= rain_from for m in range(minutes)]
+    return pd.DataFrame(
+        {
+            "Time": [60.0 * m for m in range(minutes)],
+            "AirTemp": 25.0,
+            "TrackTemp": [30.0 + m * 0.5 for m in range(minutes)],
+            "Humidity": 50.0,
+            "Pressure": 1010.0,
+            "Rainfall": rain,
+            "WindDirection": 90,
+            "WindSpeed": 1.5,
+        }
+    )
+
+
+@pytest.fixture
+def marts(tmp_path):
+    raw = tmp_path / "raw"
+    for rnd in (1, 2):
+        save(raw, 2024, rnd, "Race", race_laps(), weather=fake_weather())
+        save(raw, 2024, rnd, "Qualifying", race_laps().head(3), weather=fake_weather())
+    hamilton_wins = fake_results().assign(Points=[0.0, 25.0], Position=[2.0, 1.0])
+    save(raw, 2024, 3, "Race", race_laps(), results=hamilton_wins, weather=fake_weather(10, 5))
+    path = tmp_path / "wh.duckdb"
+    for layer in ("core", "marts"):
+        build(Path("sql") / layer, path, params(raw))
+    return path
+
+
+def test_standings_run_through_the_season(marts):
+    s = query(marts, "SELECT * FROM mart_standings WHERE driver_code = 'VER' ORDER BY round")
+    assert s["total_points"].tolist() == [25.0, 50.0, 50.0]
+    assert s["championship_position"].tolist() == [1, 1, 1]
+    ham = query(marts, "SELECT total_points FROM mart_standings WHERE driver_code = 'HAM'")
+    assert ham["total_points"].tolist() == [0.0, 0.0, 25.0]
+
+
+def test_weekend_overview(marts):
+    w = query(marts, "SELECT * FROM mart_weekends ORDER BY round")
+    assert w["winner"].tolist() == ["VER", "VER", "HAM"]
+    assert w["safety_car_laps"].tolist() == [1, 1, 1]  # lap 4 has status "14"
+    assert not w["is_wet_race"].any()
+
+
+def test_weather_summary(marts):
+    w = query(marts, "SELECT * FROM mart_session_weather WHERE session_key = '2024_03_R'")
+    assert w["n_samples"].item() == 10
+    assert w["track_temp_min_c"].item() == 30.0
+    assert w["rain_share"].item() == 0.5
+    assert w["had_rain"].item()
+
+
+def test_pace_uses_clean_laps_only(marts):
+    p = query(marts, "SELECT * FROM mart_driver_session_pace WHERE session_key = '2024_01_R'")
+    assert p["clean_laps"].item() == 2  # laps 2 and 3
+    assert p["best_lap_s"].item() == 95.0
+    assert p["gap_to_best_pct"].item() == 0.0
+
+
+def test_checks_pass_on_good_data(marts):
+    raw = marts.parent / "raw"
+    failed = [c["name"] for c in run_checks(Path("sql/checks"), marts, params(raw)) if c["n_bad"]]
+    # the fake races hand out 25 points, not 101; every other check passes
+    assert failed == ["06_points_add_up"]
