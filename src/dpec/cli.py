@@ -20,7 +20,7 @@ from telemetry_core.ingestion.writer import is_saved, write_session
 from telemetry_core.paths import session_folder
 
 app = typer.Typer(help="Team DPEC weekend forecaster.", no_args_is_help=True)
-LAYERS = ["core"]  # folders in sql/, built in this order
+LAYERS = ["core", "marts"]  # folders in sql/, built in this order,|||||.   Marts are built after core, so they can read every core table. dpec build names each table after its file, like before.
 
 def sql_params(s) -> dict:
     """Values for the {{ }} placeholders in the SQL files."""
