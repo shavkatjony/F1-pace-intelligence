@@ -54,7 +54,9 @@ teams_filled AS (
         coalesce(
             team_raw,
             -- 1. the same driver's team in another session of the same weekend
-            max(team_raw) OVER (PARTITION BY season, round, driver_code)
+            max(team_raw) OVER (PARTITION BY season, round, driver_code),
+            -- 2. FP1 stand-ins: the same driver with the same car number this season
+            max(team_raw) OVER (PARTITION BY season, driver_code, car_number)
         ) AS team
     FROM renamed
 ),
