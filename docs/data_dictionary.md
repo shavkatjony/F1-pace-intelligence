@@ -133,3 +133,54 @@ The team ID map. One row per team name FastF1 uses. **Key:** `team_name`.
 | `lineage` | text | one id for a team across name changes (AlphaTauri → RB → Racing Bulls) |
 | `first_season` | int | first season with this name |
 | `last_season` | int | last season with this name |
+
+
+
+
+
+#### ============================================================================
+#### ============================================================================
+
+## mart_weekends
+
+The overview: one row per race weekend. **Key:** `season` + `round`.
+
+| column | type | meaning |
+|---|---|---|
+| `season` | int | year |
+| `round` | int | round number |
+| `event_name` | text | e.g. Bahrain Grand Prix |
+| `circuit` | text | short circuit name |
+| `race_date` | date | race day (UTC) |
+| `is_sprint_weekend` | bool | the weekend has a sprint |
+| `pole` | text | driver code of P1 in qualifying (before grid penalties) |
+| `winner` | text | driver code of the official race winner |
+| `winner_team` | text | the winner's team |
+| `race_laps` | int | laps the leader completed |
+| `not_classified` | int | drivers retired, disqualified or withdrawn |
+| `safety_car_laps` | int | laps with the safety car out at any point |
+| `vsc_laps` | int | laps with a virtual safety car at any point |
+| `had_red_flag` | bool | the race was stopped at least once |
+| `wet_tyre_share` | float | share of laps on intermediates or wets |
+| `is_wet_race` | bool | wet_tyre_share above 0.1 |
+| `clean_share` | float | share of laps that are clean |
+
+## mart_session_weather
+
+Weather of each session, from one sample a minute. **Key:** `session_key`.
+
+| column | type | meaning |
+|---|---|---|
+| `session_key` | text | see core_sessions |
+| `season` | int | year |
+| `round` | int | round number |
+| `session_type` | text | FP1 … R |
+| `n_samples` | int | weather samples (about one a minute) |
+| `air_temp_c` | float | median air temperature |
+| `track_temp_min_c` | float | lowest track temperature |
+| `track_temp_c` | float | median track temperature |
+| `track_temp_max_c` | float | highest track temperature |
+| `humidity_pct` | float | median humidity |
+| `wind_speed_ms` | float | median wind speed, metres per second |
+| `rain_share` | float | share of minutes with rain |
+| `had_rain` | bool | rain at any point |
