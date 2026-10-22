@@ -28,6 +28,10 @@ def sql_params(s) -> dict:
         "raw": s.paths.raw.as_posix(),
         "seeds": s.paths.seeds.as_posix(),
         "slow_lap_pct": s.slow_lap_pct,
+        "fuel_effect_s_per_lap": s.fuel_effect_s_per_lap,
+        "long_run_min_laps": s.long_run_min_laps,
+        "long_run_band_pct": s.long_run_band_pct,
+        "push_lap_band_pct": s.push_lap_band_pct,
     }
 
 
