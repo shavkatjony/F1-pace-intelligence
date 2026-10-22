@@ -5,6 +5,10 @@ adopted_team: Mercedes     # D2: the real team whose two cars are "ours". Your p
 seasons: [2022, 2023, 2024, 2025, 2026]
 grid_step_m: 5               # distance grid spacing in metres (step A4)
 slow_lap_pct: 107            # a lap slower than 107% of the session's clean median is 'slow' (step A4)
+fuel_effect_s_per_lap: 0.06  # a lap gets ~0.06 s faster per lap of fuel burnt (step B2, assumption)
+long_run_min_laps: 5         # a practice long run has at least 5 clean laps (step B2)
+long_run_band_pct: 2         # ... each within 2% of the stint's median lap (step B2)
+push_lap_band_pct: 1.5       # a push lap is within 1.5% of the driver's best on that tyre (step B2)
 mode: local                  # local = full system on your Mac, public = read-only online
 
 paths:
