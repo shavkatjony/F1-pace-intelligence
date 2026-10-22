@@ -20,7 +20,15 @@ SQL_DIR = Path("sql/core")
 CHECKS_DIR = Path("sql/checks")
 
 def params(raw):
-    return {"raw": raw.as_posix(), "seeds": "seeds", "slow_lap_pct": 107}
+    return {
+        "raw": raw.as_posix(),
+        "seeds": "seeds",
+        "slow_lap_pct": 107,
+        "fuel_effect_s_per_lap": 0.06,
+        "long_run_min_laps": 5,
+        "long_run_band_pct": 2,
+        "push_lap_band_pct": 1.5,
+    }
 
 
 def save(raw, season, rnd, session_name, laps, results=None, **other_tables):
