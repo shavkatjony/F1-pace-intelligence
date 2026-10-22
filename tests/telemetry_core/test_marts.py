@@ -74,3 +74,28 @@ def test_checks_pass_on_good_data(marts):
     failed = [c["name"] for c in run_checks(Path("sql/checks"), marts, params(raw)) if c["n_bad"]]
     # the fake races hand out 25 points, not 101; every other check passes
     assert failed == ["06_points_add_up"]
+
+def quali_laps(driver, base_s):
+    """6 push laps, one every 5 minutes, each 0.05 s quicker than the one before:
+    the track gets 0.1 s faster every 10 minutes."""
+    laps = race_laps().iloc[[1] * 6].reset_index(drop=True)
+    laps["Driver"] = driver
+    laps["LapNumber"] = [float(i) for i in range(1, 7)]
+    laps["LapTime"] = pd.to_timedelta([base_s - 0.05 * i for i in range(6)], unit="s")
+    laps["LapStartTime"] = pd.to_timedelta([300.0 * i for i in range(6)], unit="s")
+    laps["Time"] = laps["LapStartTime"] + laps["LapTime"]
+    laps["Compound"] = "SOFT"
+    return laps
+
+
+def test_track_evolution_ignores_who_is_faster(tmp_path):
+    raw = tmp_path / "raw"
+    laps = pd.concat([quali_laps("VER", 90.0), quali_laps("HAM", 90.6)])
+    save(raw, 2024, 1, "Qualifying", laps, weather=fake_weather())
+    path = tmp_path / "wh.duckdb"
+    for layer in ("core", "marts"):
+        build(Path("sql") / layer, path, params(raw))
+    e = query(path, "SELECT * FROM mart_track_evolution")
+    assert e["n_drivers"].item() == 2
+    assert e["evo_s_per_10min"].item() == pytest.approx(-0.1)
+    assert e["q1_to_q2_s"].item() == pytest.approx(-0.5)  # fake results: Q2 - Q1 = -0.5 s
