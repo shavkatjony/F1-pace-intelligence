@@ -28,6 +28,9 @@ class Settings(BaseModel):
     slow_lap_pct: float = Field(
         gt=100, le=150
     )  # (gt=100: a limit of 100% or less would call almost every lap slow. le=150: above that the rule does nothing.)
+    fuel_effect_s_per_lap: float = Field(ge=0, le=0.2)  # lap time gained per lap of fuel burnt
+    long_run_min_laps: int = Field(ge=3, le=20)  # clean laps in a row that make a long run
+    long_run_band_pct: float = Field(gt=0, le=10)  # long-run laps stay this close to the median
     mode: Literal["local", "public"]
     paths: Paths
 
