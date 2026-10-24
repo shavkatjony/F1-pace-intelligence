@@ -75,6 +75,51 @@ def test_checks_pass_on_good_data(marts):
     # the fake races hand out 25 points, not 101; every other check passes
     assert failed == ["06_points_add_up"]
 
+
+def practice_laps():
+    """VER in FP2: stint 1 = out lap, 8 long-run laps that get 0.04 s slower per lap,
+    one push lap, in lap. Stint 2 = out lap, 2 quick laps on softs."""
+    times = [None, *[95.0 + 0.04 * i for i in range(8)], 92.0, 110.0, None, 91.5, 91.6]
+    n = len(times)
+    laps = race_laps().iloc[[0] * n].reset_index(drop=True)
+    laps["LapNumber"] = [float(i) for i in range(1, n + 1)]
+    laps["Stint"] = [1.0] * 11 + [2.0] * 3
+    laps["Compound"] = ["MEDIUM"] * 11 + ["SOFT"] * 3
+    laps["TyreLife"] = [float(i) for i in range(1, 12)] + [1.0, 2.0, 3.0]
+    laps["LapTime"] = pd.to_timedelta(times, unit="s")
+    laps["PitOutTime"] = pd.to_timedelta([1.0] + [None] * 10 + [1.0, None, None], unit="s")
+    laps["PitInTime"] = pd.to_timedelta([None] * 10 + [3.0] + [None] * 3, unit="s")
+    laps["TrackStatus"] = "1"
+    return laps
+
+
+@pytest.fixture
+def practice(tmp_path):
+    raw = tmp_path / "raw"
+    save(raw, 2024, 1, "Practice 2", practice_laps(), weather=fake_weather())
+    save(raw, 2024, 1, "Race", race_laps(), weather=fake_weather())
+    path = tmp_path / "wh.duckdb"
+    for layer in ("core", "marts"):
+        build(Path("sql") / layer, path, params(raw))
+    return path
+
+
+def test_stints_split_by_tyre_set(practice):
+    s = query(practice, "SELECT * FROM mart_stints WHERE session_key = '2024_01_FP2'")
+    assert s["stint"].tolist() == [1, 2]
+    assert s["compound"].tolist() == ["MEDIUM", "SOFT"]
+    assert s["n_laps"].tolist() == [11, 3]
+    assert s["n_clean"].tolist() == [9, 2]  # 8 long-run laps + the push lap; 2 quick laps
+
+
+def test_long_run_drops_the_push_lap_and_adds_the_fuel_effect(practice):
+    [run] = query(practice, "SELECT * FROM mart_long_runs").to_dict("records")
+    assert run["stint"] == 1
+    assert run["run_laps"] == 8  # the 92.0 s push lap is outside the 2% band
+    assert run["deg_s_per_lap"] == pytest.approx(0.04 + 0.06)
+    assert run["gap_to_best_same_tyre_pct"] == 0.0
+
+
 def quali_laps(driver, base_s):
     """6 push laps, one every 5 minutes, each 0.05 s quicker than the one before:
     the track gets 0.1 s faster every 10 minutes."""
@@ -99,3 +144,22 @@ def test_track_evolution_ignores_who_is_faster(tmp_path):
     assert e["n_drivers"].item() == 2
     assert e["evo_s_per_10min"].item() == pytest.approx(-0.1)
     assert e["q1_to_q2_s"].item() == pytest.approx(-0.5)  # fake results: Q2 - Q1 = -0.5 s
+
+
+def test_weekend_signals_join_practice_quali_and_race(tmp_path):
+    raw = tmp_path / "raw"
+    long_race = race_laps().iloc[[1] * 12].reset_index(drop=True)
+    long_race["LapNumber"] = [float(i) for i in range(2, 14)]  # 12 clean laps, no lap one
+    save(raw, 2024, 1, "Practice 2", practice_laps(), weather=fake_weather())
+    save(raw, 2024, 1, "Qualifying", race_laps().head(3), weather=fake_weather())
+    save(raw, 2024, 1, "Race", long_race, weather=fake_weather())
+    path = tmp_path / "wh.duckdb"
+    for layer in ("core", "marts"):
+        build(Path("sql") / layer, path, params(raw))
+    [row] = query(path, "SELECT * FROM mart_weekend_signals").to_dict("records")
+    assert row["driver_code"] == "VER"
+    assert row["n_long_runs"] == 1
+    assert row["long_run_gap_pct"] == 0.0
+    assert row["quali_gap_pct"] == 0.0
+    assert row["race_clean_laps"] == 12
+    assert row["finish_position"] == 1
