@@ -184,3 +184,28 @@ Weather of each session, from one sample a minute. **Key:** `session_key`.
 | `wind_speed_ms` | float | median wind speed, metres per second |
 | `rain_share` | float | share of minutes with rain |
 | `had_rain` | bool | rain at any point |
+
+
+## mart_weekend_signals
+
+What practice and qualifying said, next to what happened on Sunday. One row per driver per race weekend
+with at least 10 clean race laps. **Key:** `season` + `round` + `driver_code`.
+Pace numbers are % behind the best of that session (0 = best).
+
+| column | type | meaning |
+|---|---|---|
+| `season` | int | year |
+| `round` | int | round number |
+| `driver_code` | text | three letters |
+| `team` | text | team in the race |
+| `is_sprint_weekend` | bool | the weekend has a sprint (only one practice) |
+| `is_wet_race` | bool | from mart_weekends |
+| `n_long_runs` | int | long runs in practice this weekend |
+| `long_run_gap_pct` | float | median of his long runs' gaps to the best run on the same tyre |
+| `long_run_deg_s_per_lap` | float | median tyre wear in his long runs |
+| `quali_gap_pct` | float | best clean qualifying lap vs the fastest |
+| `race_clean_laps` | int | clean laps in the race |
+| `race_pace_gap_pct` | float | median clean race lap vs the driver with the best median |
+| `grid_position` | int | official starting position |
+| `finish_position` | int | official finishing position |
+| `points` | float | race points |
