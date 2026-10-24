@@ -114,6 +114,7 @@ def build(config: str = "config/dpec.yaml") -> None:
             typer.echo(f"{table:<24} {rows:>10,} rows")
     typer.echo(f"Saved to {s.paths.warehouse}")
 
+@app.command()
 def check(config: str = "config/dpec.yaml") -> None:
     """Run the data checks in sql/checks and the data dictionary check. Fails if any fails."""
     s = load_settings(config)

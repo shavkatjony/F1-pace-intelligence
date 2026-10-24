@@ -31,6 +31,7 @@ class Settings(BaseModel):
     fuel_effect_s_per_lap: float = Field(ge=0, le=0.2)  # lap time gained per lap of fuel burnt
     long_run_min_laps: int = Field(ge=3, le=20)  # clean laps in a row that make a long run
     long_run_band_pct: float = Field(gt=0, le=10)  # long-run laps stay this close to the median
+    push_lap_band_pct: float = Field(gt=0, le=5)  # push laps are this close to the best lap
     mode: Literal["local", "public"]
     paths: Paths
 
