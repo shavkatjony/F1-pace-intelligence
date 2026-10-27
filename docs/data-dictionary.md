@@ -296,6 +296,7 @@ Pace numbers are % behind the best of that session (0 = best).
 | `is_wet_race` | bool | from mart_weekends |
 | `n_long_runs` | int | long runs in practice this weekend |
 | `long_run_gap_pct` | float | median of his long runs' gaps to the best run on the same tyre |
+| `fp2_long_run_gap_pct` | float | the same, FP2 runs only (empty on sprint weekends: no FP2) |
 | `long_run_deg_s_per_lap` | float | median tyre wear in his long runs |
 | `quali_gap_pct` | float | best clean qualifying lap vs the fastest |
 | `race_clean_laps` | int | clean laps in the race |

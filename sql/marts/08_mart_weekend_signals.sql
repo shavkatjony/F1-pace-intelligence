@@ -10,6 +10,8 @@ WITH long_runs AS (
         driver_code,
         count(*) AS n_long_runs,
         median(gap_to_best_same_tyre_pct) AS long_run_gap_pct,
+        median(gap_to_best_same_tyre_pct) FILTER (WHERE session_type = 'FP2')
+            AS fp2_long_run_gap_pct,  -- decision 0010: FP2's runs predict best
         median(deg_s_per_lap) AS long_run_deg_s_per_lap
     FROM mart_long_runs
     GROUP BY ALL

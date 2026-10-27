@@ -231,3 +231,28 @@ def compare(
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=120, bbox_inches="tight")
     typer.echo(f"Chart saved: {out}")
+
+    @app.command()
+def backtest(
+    first_season: int = typer.Option(
+        2023, help="First season to forecast; earlier ones only teach"
+    ),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """Forecast every past dry race with only what was known before it, then score each forecaster."""
+    from dpec.forecasting.backtest import score, walk_forward
+    from dpec.forecasting.baselines import BASELINES
+    from dpec.forecasting.targets import forecast_table
+
+    s = load_settings(config)
+    predictions = walk_forward(forecast_table(s.paths.warehouse), BASELINES, first_season)
+    scores = score(predictions)
+    saved = s.paths.data / "forecasts" / "backtest.parquet"  # every guess: rebuildable, not in git
+    saved.parent.mkdir(parents=True, exist_ok=True)
+    predictions.to_parquet(saved, index=False)
+    report = Path("reports/backtest/scores.csv")  # small: kept in git as evidence
+    report.parent.mkdir(parents=True, exist_ok=True)
+    scores.to_csv(report, index=False, float_format="%.3f")
+    typer.echo(scores.to_string(index=False, float_format="%.3f"))
+    typer.echo(f"\nSaved {len(predictions):,} guesses to {saved}")
+    
