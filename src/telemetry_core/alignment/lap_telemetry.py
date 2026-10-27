@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import duckdb
@@ -21,6 +20,26 @@ FROM read_parquet(?)
 WHERE DriverNumber = ? AND SessionTime BETWEEN ? AND ?
 ORDER BY SessionTime
 """
+
+XY_SQL = """
+SELECT SessionTime AS time_s, X AS x, Y AS y
+FROM read_parquet(?)
+WHERE DriverNumber = ? AND SessionTime BETWEEN ? AND ?
+ORDER BY SessionTime
+"""
+
+
+def lap_folder(raw_root: Path, info: dict) -> Path:
+    """The data/raw folder of the session this lap belongs to."""
+    return (
+        Path(raw_root)
+        / "fastf1"
+        / f"season={info['season']}"
+        / f"event={info['event_folder']}"
+        / f"session={info['session_folder']}"
+    )
+
+
 def load_lap(
     warehouse: Path, raw_root: Path, session_key: str, driver: str, lap: int
 ) -> tuple[pd.DataFrame, dict]:
@@ -30,15 +49,8 @@ def load_lap(
     if found.empty:
         raise ValueError(f"no lap {lap} for {driver} in {session_key}")
     info = found.iloc[0].to_dict()
-    folder = (
-        Path(raw_root)
-        / "fastf1"
-        / f"season={info['season']}"
-        / f"event={info['event_folder']}"
-        / f"session={info['session_folder']}"
-    )
     params = [
-        str(folder / "car_data.parquet"),
+        str(lap_folder(raw_root, info) / "car_data.parquet"),
         info["car_number"],
         info["lap_start_session_s"] - MARGIN_S,
         info["lap_end_session_s"] + MARGIN_S,
@@ -49,6 +61,21 @@ def load_lap(
     return tel, info
 
 
-'''It asks core_laps where the lap is (car number, start, end, folder), then reads only that car and that time window from car_data.parquet. DuckDB skips the rest of the file, so it's fast even for a 6 MB race file.
-The ? marks are parameters: DuckDB fills them in safely. Never paste values into SQL text yourself.
-Fewer than 10 rows means FastF1 has no telemetry for that lap: it stops with a clear message instead of drawing a wrong chart.'''
+def load_lap_xy(raw_root: Path, info: dict) -> pd.DataFrame:
+    """Where the car was on track during the lap (pos_data: x and y in 1/10 m), for maps."""
+    params = [
+        str(lap_folder(raw_root, info) / "pos_data.parquet"),
+        info["car_number"],
+        info["lap_start_session_s"] - MARGIN_S,
+        info["lap_end_session_s"] + MARGIN_S,
+    ]
+    xy = duckdb.execute(XY_SQL, params).df()
+    if len(xy) < 10:
+        raise ValueError(f"only {len(xy)} position rows for car {info['car_number']}")
+    return xy
+
+
+''' what changed : the folder of a lap's raw files is now one small function (lap_folder),
+ because two readers need it. 
+ The new reader load_lap_xy reads pos_data.parquet (x and y on track) for one lap, 
+ the same way load_lap reads car_data.parquet'''
