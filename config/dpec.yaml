@@ -19,5 +19,5 @@ paths:
   sql: sql                   # sql/core = clean tables, sql/checks = data checks
   seeds: seeds               # small hand-written CSV files (team names, known gaps)
   log: data/ingest_log.csv
-  dictionary: docs/data-dictionary.md
+  dictionary: docs/data_dictionary.md
 
