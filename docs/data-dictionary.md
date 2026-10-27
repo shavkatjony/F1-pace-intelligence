@@ -134,13 +134,6 @@ The team ID map. One row per team name FastF1 uses. **Key:** `team_name`.
 | `first_season` | int | first season with this name |
 | `last_season` | int | last season with this name |
 
-
-
-
-
-#### ============================================================================
-#### ============================================================================
-
 ## mart_weekends
 
 The overview: one row per race weekend. **Key:** `season` + `round`.
@@ -185,6 +178,107 @@ Weather of each session, from one sample a minute. **Key:** `session_key`.
 | `rain_share` | float | share of minutes with rain |
 | `had_rain` | bool | rain at any point |
 
+## mart_standings
+
+The drivers' championship after every round. **Key:** `season` + `round` + `driver_code`.
+
+| column | type | meaning |
+|---|---|---|
+| `season` | int | year |
+| `round` | int | round number |
+| `driver_code` | text | three letters |
+| `team` | text | team in that round's race |
+| `round_points` | float | race + sprint points this weekend |
+| `round_wins` | int | 1 if he won the race this weekend |
+| `total_points` | float | points so far this season |
+| `total_wins` | int | race wins so far this season |
+| `championship_position` | int | place after this round: points, then wins |
+
+## mart_driver_session_pace
+
+How fast each driver was in each session, on clean laps only. **Key:** `session_key` + `driver_code`.
+
+| column | type | meaning |
+|---|---|---|
+| `session_key` | text | see core_sessions |
+| `season` | int | year |
+| `round` | int | round number |
+| `session_type` | text | FP1 … R |
+| `driver_code` | text | three letters |
+| `team` | text | team name |
+| `clean_laps` | int | number of clean laps |
+| `best_lap_s` | float | fastest clean lap |
+| `median_lap_s` | float | median clean lap |
+| `gap_to_best_pct` | float | best lap vs the session's fastest, in percent (0 = fastest) |
+| `pace_rank` | int | 1 = fastest best lap in the session |
+
+## mart_stints
+
+One row per set of tyres a driver used in a session. **Key:** `session_key` + `driver_code` + `stint`.
+
+| column | type | meaning |
+|---|---|---|
+| `session_key` | text | see core_sessions |
+| `season` | int | year |
+| `round` | int | round number |
+| `session_type` | text | FP1 … R |
+| `driver_code` | text | three letters |
+| `stint` | int | 1 = first set of tyres in the session |
+| `team` | text | team name |
+| `compound` | text | SOFT, MEDIUM, HARD, INTERMEDIATE, WET or UNKNOWN (test tyres, missing names) |
+| `first_lap` | int | first lap number of the stint |
+| `last_lap` | int | last lap number of the stint |
+| `n_laps` | int | laps in the stint, clean or not |
+| `tyre_age_start` | int | tyre age on the first lap; above 1 = a used set |
+| `fresh_at_start` | bool | the set was new when fitted |
+| `n_clean` | int | clean laps in the stint |
+| `median_clean_s` | float | median clean lap |
+| `deg_raw_s_per_lap` | float | slope of clean lap time vs tyre age; NULL with fewer than 4 clean laps |
+| `deg_s_per_lap` | float | deg_raw plus the fuel effect from the config: the tyre's real wear per lap |
+
+## mart_long_runs
+
+Practice stints that look like race running. **Key:** `session_key` + `driver_code` + `stint`.
+Rule: at least `long_run_min_laps` clean laps within `long_run_band_pct` % of the stint's median (config).
+
+| column | type | meaning |
+|---|---|---|
+| `session_key` | text | see core_sessions |
+| `season` | int | year |
+| `round` | int | round number |
+| `session_type` | text | FP1, FP2 or FP3 |
+| `driver_code` | text | three letters |
+| `stint` | int | stint number in the session |
+| `team` | text | team name |
+| `compound` | text | SOFT, MEDIUM or HARD |
+| `tyre_age_start` | int | tyre age at the start of the stint |
+| `run_laps` | int | laps in the run (inside the band) |
+| `run_median_s` | float | median lap of the run |
+| `run_median_fuel_adj_s` | float | the same with the fuel burnt during the run added back |
+| `deg_s_per_lap` | float | tyre wear per lap during the run, fuel effect included |
+| `gap_to_best_same_tyre_pct` | float | gap to the quickest long run of the session on the same compound |
+
+## mart_track_evolution
+
+How much faster the track gets during a session. One row per practice and qualifying session. **Key:** `session_key`.
+Method: decision 0009.
+
+| column | type | meaning |
+|---|---|---|
+| `session_key` | text | see core_sessions |
+| `season` | int | year |
+| `round` | int | round number |
+| `session_type` | text | FP1, FP2, FP3, Q or SQ |
+| `n_drivers` | int | drivers with at least two push laps on one compound |
+| `n_laps` | int | push laps used |
+| `evo_s_per_10min` | float | change in lap time every 10 minutes, same driver and tyre; negative = track getting faster |
+| `q1_to_q2_s` | float | median change of the same drivers' best time from Q1 to Q2 (qualifying only) |
+| `q2_to_q3_s` | float | the same from Q2 to Q3 |
+| `track_temp_min_c` | float | lowest track temperature in the session |
+| `track_temp_max_c` | float | highest track temperature in the session |
+| `had_rain` | bool | rain at any point in the session |
+| `wet_lap_share` | float | share of laps on intermediates or wets |
+| `is_reliable` | bool | dry, no rain, at least 10 drivers: use the number. Otherwise a drying track or noise |
 
 ## mart_weekend_signals
 
