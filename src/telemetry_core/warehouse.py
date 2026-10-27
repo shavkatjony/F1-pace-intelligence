@@ -74,10 +74,12 @@ def undocumented_columns(warehouse: Path, dictionary: Path) -> list[str]:
     return sorted(c for (c,) in columns if c not in documented)
 
 
-def query(warehouse: Path, sql: str) -> pd.DataFrame:
-    """Run one read-only query and return the result as a table."""
+def query(warehouse: Path, sql: str, params: list | None = None) -> pd.DataFrame:
+    """Run one read-only query and return the result as a table.
+    Each ? in the SQL is filled from params, in order (safe: values never become SQL text)."""
     with duckdb.connect(str(warehouse), read_only=True) as con:
-        return con.execute(sql).df()
+        return con.execute(sql, params or []).df()
+
 
 
 # finally done with with 1000 mg  ㅜaurin
