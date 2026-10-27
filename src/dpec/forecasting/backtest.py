@@ -36,12 +36,14 @@ def walk_forward(
     return pd.concat(rows, ignore_index=True)
 
 
-def score(predictions: pd.DataFrame, lap_s: float = 90) -> pd.DataFrame:
-    """One row per checkpoint and forecaster. mae_pct = mean absolute error in % of a lap;
-    mae_s = the same in seconds on a lap_s lap; median_rho = how well the order matches
-    (Spearman per weekend, then the median over weekends)."""
+def score(
+    predictions: pd.DataFrame, lap_s: float = 90, by: tuple = ("checkpoint", "forecaster")
+) -> pd.DataFrame:
+    """One row per checkpoint and forecaster (or per `by`). mae_pct = mean absolute error in %
+    of a lap; mae_s = the same in seconds on a lap_s lap; median_rho = how well the order
+    matches (Spearman per weekend, then the median over weekends)."""
     p = predictions.assign(abs_error=(predictions["predicted"] - predictions["actual"]).abs())
-    groups = ["checkpoint", "forecaster"]
+    groups = list(by)
     rho = (
         p.groupby(groups + ["weekend"])[["predicted", "actual"]]
         .corr(method="spearman")
@@ -54,4 +56,4 @@ def score(predictions: pd.DataFrame, lap_s: float = 90) -> pd.DataFrame:
     )
     out["mae_s"] = out["mae_pct"] / 100 * lap_s
     out["median_rho"] = rho
-    return out.reset_index().sort_values(["checkpoint", "mae_pct"])
+    return out.reset_index().sort_values(groups[:-1] + ["mae_pct"])

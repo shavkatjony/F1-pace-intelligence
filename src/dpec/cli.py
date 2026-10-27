@@ -232,27 +232,48 @@ def compare(
     fig.savefig(out, dpi=120, bbox_inches="tight")
     typer.echo(f"Chart saved: {out}")
 
-    @app.command()
+@app.command()
 def backtest(
     first_season: int = typer.Option(
         2023, help="First season to forecast; earlier ones only teach"
     ),
+    test_from: int = typer.Option(2025, help="Seasons from here on are the test years"),
     config: str = "config/dpec.yaml",
 ) -> None:
-    """Forecast every past dry race with only what was known before it, then score each forecaster."""
+    """Forecast every past dry race with only what was known before it, then score each forecaster.
+    Choose settings on the tune years; report the test years."""
+    import numpy as np
+    import pandas as pd
+
     from dpec.forecasting.backtest import score, walk_forward
     from dpec.forecasting.baselines import BASELINES
+    from dpec.forecasting.model import shared_model
     from dpec.forecasting.targets import forecast_table
 
     s = load_settings(config)
-    predictions = walk_forward(forecast_table(s.paths.warehouse), BASELINES, first_season)
-    scores = score(predictions)
+    forecasters = {**BASELINES, "shared_model": shared_model}
+    predictions = walk_forward(forecast_table(s.paths.warehouse), forecasters, first_season)
+    predictions["years"] = np.where(predictions["season"] < test_from, "tune", "test")
+    scores = pd.concat(
+        [
+            score(predictions).assign(years="all"),
+            score(predictions, by=("years", "checkpoint", "forecaster")),
+        ]
+    )
     saved = s.paths.data / "forecasts" / "backtest.parquet"  # every guess: rebuildable, not in git
     saved.parent.mkdir(parents=True, exist_ok=True)
     predictions.to_parquet(saved, index=False)
     report = Path("reports/backtest/scores.csv")  # small: kept in git as evidence
     report.parent.mkdir(parents=True, exist_ok=True)
     scores.to_csv(report, index=False, float_format="%.3f")
-    typer.echo(scores.to_string(index=False, float_format="%.3f"))
+    titles = {
+        "all": f"All years, {first_season} on",
+        "tune": f"Tune years, {first_season}-{test_from - 1} (choose settings here)",
+        "test": f"Test years, {test_from} on (report these)",
+    }
+    for years, title in titles.items():
+        table = scores[scores["years"] == years].drop(columns="years")
+        typer.echo(f"\n{title}\n" + table.to_string(index=False, float_format="%.3f"))
     typer.echo(f"\nSaved {len(predictions):,} guesses to {saved}")
+
     
