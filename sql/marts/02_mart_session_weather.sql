@@ -2,7 +2,8 @@
 -- (one sample a minute). Key: session_key.
 CREATE OR REPLACE TABLE mart_session_weather AS
 WITH raw_weather AS (
-    SELECT *
+    -- a track temperature of exactly 0.0 is a sensor dropout (47 of 54,295 samples), not weather
+    SELECT * REPLACE (nullif(TrackTemp, 0) AS TrackTemp)
     FROM read_parquet(
         '{{ raw }}/fastf1/*/*/*/weather.parquet',
         hive_partitioning = true,

@@ -24,4 +24,4 @@ check:
 	uv run dpec check
 
 run:
-	@echo "not yet: built in step B4"
+	uv run dpec serve

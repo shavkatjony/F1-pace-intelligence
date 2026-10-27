@@ -138,6 +138,18 @@ def check(config: str = "config/dpec.yaml") -> None:
         raise typer.Exit(code=1)
 
 @app.command()
+def serve(host: str = "127.0.0.1", port: int = 8000, config: str = "config/dpec.yaml") -> None:
+    """Open the pit wall app on this computer (read-only). Stop it with Ctrl+C."""
+    import uvicorn
+
+    from dpec.api.main import create_app
+
+    typer.echo(f"Pit wall: http://{host}:{port}   API docs: http://{host}:{port}/api/docs")
+    uvicorn.run(create_app(config), host=host, port=port, log_level="warning")
+    
+#import uvicorn sits inside the function on purpose:
+
+@app.command()
 def sql(query: str, config: str = "config/dpec.yaml") -> None:
     """Run one SQL query on the warehouse and print the result."""
     s = load_settings(config)
