@@ -61,6 +61,19 @@ def test_weather_summary(marts):
     assert w["rain_share"].item() == 0.5
     assert w["had_rain"].item()
 
+def test_weather_ignores_track_sensor_dropouts(tmp_path):
+    raw = tmp_path / "raw"
+    weather = fake_weather()
+    weather.loc[5, "TrackTemp"] = 0.0  # one sample where the track sensor dropped out
+    save(raw, 2024, 1, "Race", race_laps(), weather=weather)
+    path = tmp_path / "wh.duckdb"
+    for layer in ("core", "marts"):
+        build(Path("sql") / layer, path, params(raw))
+    w = query(path, "SELECT * FROM mart_session_weather")
+    assert w["track_temp_min_c"].item() == 30.0
+    assert w["n_samples"].item() == 20  # the sample is kept: its air temperature is fine
+    
+
 
 def test_pace_uses_clean_laps_only(marts):
     p = query(marts, "SELECT * FROM mart_driver_session_pace WHERE session_key = '2024_01_R'")
