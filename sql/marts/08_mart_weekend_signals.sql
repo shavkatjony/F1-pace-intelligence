@@ -53,6 +53,7 @@ SELECT
     w.is_wet_race,
     lr.n_long_runs,
     lr.long_run_gap_pct,
+    lr.fp2_long_run_gap_pct,
     lr.long_run_deg_s_per_lap,
     q.quali_gap_pct,
     r.race_clean_laps,
