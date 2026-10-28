@@ -1,0 +1,5 @@
+years,checkpoint,rows,inside,width_pct
+test,after_practice,726,0.785,1.895
+test,after_quali,726,0.799,1.700
+tune,after_practice,679,0.800,1.444
+tune,after_quali,679,0.810,1.389
