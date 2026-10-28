@@ -304,3 +304,30 @@ Pace numbers are % behind the best of that session (0 = best).
 | `grid_position` | int | official starting position |
 | `finish_position` | int | official finishing position |
 | `points` | float | race points |
+
+
+## mart_race_strategy
+
+What practice said about tyre wear, next to what the race showed: tyre wear, the cost of a pit
+stop and how often the top 10 stopped. One row per race weekend. **Key:** `season` + `round`.
+Known before the race: everything up to `practice_deg_s_per_lap`. The rest are answers.
+Method: decision 0014.
+
+| column | type | meaning |
+|---|---|---|
+| `season` | int | year |
+| `round` | int | round number |
+| `circuit` | text | circuit short name |
+| `race_date` | date | day of the race |
+| `race_laps` | int | laps the winner completed (the race distance) |
+| `is_wet_race` | bool | from mart_weekends |
+| `safety_car_laps` | int | race laps under a safety car |
+| `vsc_laps` | int | race laps under a virtual safety car |
+| `practice_long_runs` | int | long runs on dry tyres in this weekend's practice, all teams |
+| `practice_deg_s_per_lap` | float | median tyre wear of those runs (s slower per lap of tyre age, fuel-corrected) |
+| `race_stints` | int | race stints on dry tyres with 8+ clean laps |
+| `race_deg_s_per_lap` | float | median tyre wear of those stints (fuel-corrected) |
+| `green_stops` | int | pit stops made with no safety car, VSC or red flag on the in-lap or out-lap |
+| `pit_loss_s` | float | median time a green stop cost: in-lap + out-lap minus 2 normal laps |
+| `top10_stops` | int | the most common number of pit stops among the top 10 finishers |
+

@@ -28,3 +28,6 @@ ingest_run.txt
 
 # Charts made by `dpec compare` (rebuildable)
 reports/figures/
+
+# Dry runs of the public record (made after the fact: not the record)
+reports/dry-runs/
