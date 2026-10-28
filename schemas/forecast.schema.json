@@ -1,0 +1,355 @@
+{
+  "$defs": {
+    "Decision": {
+      "additionalProperties": false,
+      "properties": {
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "most_likely_stops": {
+          "title": "Most Likely Stops",
+          "type": "integer"
+        },
+        "clear": {
+          "title": "Clear",
+          "type": "boolean"
+        },
+        "p_best": {
+          "title": "P Best",
+          "type": "number"
+        },
+        "tyre_wear_s_per_lap": {
+          "title": "Tyre Wear S Per Lap",
+          "type": "number"
+        },
+        "tyre_wear_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tyre Wear Low"
+        },
+        "tyre_wear_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tyre Wear High"
+        },
+        "pit_loss_s": {
+          "title": "Pit Loss S",
+          "type": "number"
+        },
+        "useful_life_laps": {
+          "title": "Useful Life Laps",
+          "type": "number"
+        },
+        "race_laps": {
+          "title": "Race Laps",
+          "type": "integer"
+        },
+        "first_stop_window": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "First Stop Window",
+          "type": "array"
+        },
+        "plans": {
+          "items": {
+            "$ref": "#/$defs/Plan"
+          },
+          "title": "Plans",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "call",
+        "most_likely_stops",
+        "clear",
+        "p_best",
+        "tyre_wear_s_per_lap",
+        "tyre_wear_low",
+        "tyre_wear_high",
+        "pit_loss_s",
+        "useful_life_laps",
+        "race_laps",
+        "first_stop_window",
+        "plans",
+        "reasons"
+      ],
+      "title": "Decision",
+      "type": "object"
+    },
+    "DriverForecast": {
+      "additionalProperties": false,
+      "properties": {
+        "driver_code": {
+          "title": "Driver Code",
+          "type": "string"
+        },
+        "team": {
+          "title": "Team",
+          "type": "string"
+        },
+        "ours": {
+          "title": "Ours",
+          "type": "boolean"
+        },
+        "predicted_gap_pct": {
+          "title": "Predicted Gap Pct",
+          "type": "number"
+        },
+        "low_pct": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Low Pct"
+        },
+        "high_pct": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "High Pct"
+        },
+        "p_best": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P Best"
+        },
+        "p_top3": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P Top3"
+        },
+        "p_beats_teammate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P Beats Teammate"
+        },
+        "baselines": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Baselines",
+          "type": "object"
+        }
+      },
+      "required": [
+        "driver_code",
+        "team",
+        "ours",
+        "predicted_gap_pct",
+        "low_pct",
+        "high_pct",
+        "p_best",
+        "p_top3",
+        "p_beats_teammate",
+        "baselines"
+      ],
+      "title": "DriverForecast",
+      "type": "object"
+    },
+    "Plan": {
+      "additionalProperties": false,
+      "properties": {
+        "stops": {
+          "title": "Stops",
+          "type": "integer"
+        },
+        "seconds_behind_best": {
+          "title": "Seconds Behind Best",
+          "type": "number"
+        },
+        "low_s": {
+          "title": "Low S",
+          "type": "number"
+        },
+        "high_s": {
+          "title": "High S",
+          "type": "number"
+        },
+        "p_best": {
+          "title": "P Best",
+          "type": "number"
+        }
+      },
+      "required": [
+        "stops",
+        "seconds_behind_best",
+        "low_s",
+        "high_s",
+        "p_best"
+      ],
+      "title": "Plan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "forecast",
+      "default": "forecast",
+      "title": "Kind",
+      "type": "string"
+    },
+    "season": {
+      "title": "Season",
+      "type": "integer"
+    },
+    "round": {
+      "title": "Round",
+      "type": "integer"
+    },
+    "event_name": {
+      "title": "Event Name",
+      "type": "string"
+    },
+    "circuit": {
+      "title": "Circuit",
+      "type": "string"
+    },
+    "checkpoint": {
+      "enum": [
+        "after_practice",
+        "after_quali"
+      ],
+      "title": "Checkpoint",
+      "type": "string"
+    },
+    "target_session": {
+      "enum": [
+        "Q",
+        "R"
+      ],
+      "title": "Target Session",
+      "type": "string"
+    },
+    "target_start_utc": {
+      "format": "date-time",
+      "title": "Target Start Utc",
+      "type": "string"
+    },
+    "deadline_utc": {
+      "format": "date-time",
+      "title": "Deadline Utc",
+      "type": "string"
+    },
+    "frozen_at_utc": {
+      "format": "date-time",
+      "title": "Frozen At Utc",
+      "type": "string"
+    },
+    "sessions_seen": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Sessions Seen",
+      "type": "array"
+    },
+    "code_version": {
+      "title": "Code Version",
+      "type": "string"
+    },
+    "inputs_sha256": {
+      "title": "Inputs Sha256",
+      "type": "string"
+    },
+    "method": {
+      "title": "Method",
+      "type": "string"
+    },
+    "drivers": {
+      "items": {
+        "$ref": "#/$defs/DriverForecast"
+      },
+      "title": "Drivers",
+      "type": "array"
+    },
+    "decision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Decision"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sha256": {
+      "default": "",
+      "title": "Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "season",
+    "round",
+    "event_name",
+    "circuit",
+    "checkpoint",
+    "target_session",
+    "target_start_utc",
+    "deadline_utc",
+    "frozen_at_utc",
+    "sessions_seen",
+    "code_version",
+    "inputs_sha256",
+    "method",
+    "drivers",
+    "decision"
+  ],
+  "title": "Forecast",
+  "type": "object"
+}

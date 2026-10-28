@@ -1,0 +1,268 @@
+{
+  "$defs": {
+    "CheckpointScore": {
+      "additionalProperties": false,
+      "properties": {
+        "checkpoint": {
+          "enum": [
+            "after_practice",
+            "after_quali"
+          ],
+          "title": "Checkpoint",
+          "type": "string"
+        },
+        "forecast_sha256": {
+          "title": "Forecast Sha256",
+          "type": "string"
+        },
+        "drivers_scored": {
+          "title": "Drivers Scored",
+          "type": "integer"
+        },
+        "mae_pct": {
+          "title": "Mae Pct",
+          "type": "number"
+        },
+        "spearman": {
+          "title": "Spearman",
+          "type": "number"
+        },
+        "inside_range": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Inside Range"
+        },
+        "baselines_mae_pct": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Baselines Mae Pct",
+          "type": "object"
+        },
+        "skill_vs_team_form": {
+          "title": "Skill Vs Team Form",
+          "type": "number"
+        },
+        "our_cars": {
+          "items": {
+            "$ref": "#/$defs/OurCar"
+          },
+          "title": "Our Cars",
+          "type": "array"
+        }
+      },
+      "required": [
+        "checkpoint",
+        "forecast_sha256",
+        "drivers_scored",
+        "mae_pct",
+        "spearman",
+        "inside_range",
+        "baselines_mae_pct",
+        "skill_vs_team_form",
+        "our_cars"
+      ],
+      "title": "CheckpointScore",
+      "type": "object"
+    },
+    "DecisionScore": {
+      "additionalProperties": false,
+      "properties": {
+        "call": {
+          "title": "Call",
+          "type": "string"
+        },
+        "actual_tyre_wear": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Actual Tyre Wear"
+        },
+        "tyre_wear_error": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tyre Wear Error"
+        },
+        "tyre_wear_inside_range": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tyre Wear Inside Range"
+        },
+        "actual_top10_stops": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Actual Top10 Stops"
+        },
+        "stops_right": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stops Right"
+        },
+        "green_first_stops": {
+          "title": "Green First Stops",
+          "type": "integer"
+        },
+        "inside_window": {
+          "title": "Inside Window",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "call",
+        "actual_tyre_wear",
+        "tyre_wear_error",
+        "tyre_wear_inside_range",
+        "actual_top10_stops",
+        "stops_right",
+        "green_first_stops",
+        "inside_window"
+      ],
+      "title": "DecisionScore",
+      "type": "object"
+    },
+    "OurCar": {
+      "additionalProperties": false,
+      "properties": {
+        "driver_code": {
+          "title": "Driver Code",
+          "type": "string"
+        },
+        "predicted_gap_pct": {
+          "title": "Predicted Gap Pct",
+          "type": "number"
+        },
+        "actual_gap_pct": {
+          "title": "Actual Gap Pct",
+          "type": "number"
+        },
+        "inside_range": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Inside Range"
+        }
+      },
+      "required": [
+        "driver_code",
+        "predicted_gap_pct",
+        "actual_gap_pct",
+        "inside_range"
+      ],
+      "title": "OurCar",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "score",
+      "default": "score",
+      "title": "Kind",
+      "type": "string"
+    },
+    "season": {
+      "title": "Season",
+      "type": "integer"
+    },
+    "round": {
+      "title": "Round",
+      "type": "integer"
+    },
+    "circuit": {
+      "title": "Circuit",
+      "type": "string"
+    },
+    "scored_at_utc": {
+      "format": "date-time",
+      "title": "Scored At Utc",
+      "type": "string"
+    },
+    "code_version": {
+      "title": "Code Version",
+      "type": "string"
+    },
+    "checkpoints": {
+      "items": {
+        "$ref": "#/$defs/CheckpointScore"
+      },
+      "title": "Checkpoints",
+      "type": "array"
+    },
+    "decision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DecisionScore"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "GOOD",
+        "OK",
+        "MISS"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "sha256": {
+      "default": "",
+      "title": "Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "season",
+    "round",
+    "circuit",
+    "scored_at_utc",
+    "code_version",
+    "checkpoints",
+    "decision",
+    "verdict"
+  ],
+  "title": "Score",
+  "type": "object"
+}
