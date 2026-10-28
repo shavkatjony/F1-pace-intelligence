@@ -66,7 +66,7 @@ def client(tmp_path):
         build(Path("sql") / layer, warehouse, params(raw))
 
     config = yaml.safe_load(Path("config/dpec.yaml").read_text())
-    config["paths"].update({"raw": str(raw), "warehouse": str(warehouse)})
+    config["paths"].update({"raw": str(raw), "warehouse": str(warehouse), "data": str(tmp_path)})
     path = tmp_path / "dpec.yaml"
     path.write_text(yaml.safe_dump(config))
     return TestClient(create_app(str(path)))
@@ -127,4 +127,35 @@ def test_results_in_finishing_order(client):
     assert [d["driver_code"] for d in r] == ["VER", "HAM"]
     assert r[1]["status"] == "Disqualified"
 
+def test_forecast_needs_a_backtest_first(client):
+    r = client.get("/api/weekends/2024/1/forecast")
+    assert r.status_code == 404
+    assert "dpec backtest" in r.json()["detail"]
+
+
+def test_forecast_shows_the_saved_guesses(client, tmp_path):
+    saved = tmp_path / "forecasts" / "backtest.parquet"
+    saved.parent.mkdir()
+    pd.DataFrame(
+        {
+            "forecaster": ["shared_model", "shared_model", "team_form"],
+            "checkpoint": "after_quali",
+            "season": 2024,
+            "round": 1,
+            "driver_code": ["HAM", "VER", "VER"],
+            "lineage": ["mercedes", "red_bull", "red_bull"],
+            "predicted": [0.6, 0.1, 0.3],
+            "low": [0.0, -0.5, None],
+            "high": [1.2, 0.7, None],
+            "actual": [0.55, 0.0, 0.0],
+            "p_best": [0.2, 0.8, None],
+            "p_top3": [1.0, 1.0, None],
+            "mean_rank": [1.8, 1.2, None],
+            "p_beats_teammate": [None, None, None],
+        }
+    ).to_parquet(saved)
+    f = client.get("/api/weekends/2024/1/forecast").json()
+    assert [d["driver_code"] for d in f] == ["VER", "HAM"]  # shared model only, best guess first
+    assert f[0]["finish_position"] == 1 and f[0]["p_beats_teammate"] is None
+    assert client.get("/api/weekends/2022/1/forecast").status_code == 404
     

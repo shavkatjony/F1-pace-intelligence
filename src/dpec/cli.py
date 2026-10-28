@@ -241,19 +241,25 @@ def backtest(
     config: str = "config/dpec.yaml",
 ) -> None:
     """Forecast every past dry race with only what was known before it, then score each forecaster.
-    Choose settings on the tune years; report the test years."""
+    Choose settings on the tune years; report the test years. Adds 80% ranges to every guess,
+    and the chances of the shared model."""
     import numpy as np
     import pandas as pd
 
     from dpec.forecasting.backtest import score, walk_forward
     from dpec.forecasting.baselines import BASELINES
     from dpec.forecasting.model import shared_model
+    from dpec.forecasting.ranges import add_ranges, coverage_table
+    from dpec.forecasting.simulate import walk_forward_chances
     from dpec.forecasting.targets import forecast_table
 
     s = load_settings(config)
     forecasters = {**BASELINES, "shared_model": shared_model}
-    predictions = walk_forward(forecast_table(s.paths.warehouse), forecasters, first_season)
+    table = forecast_table(s.paths.warehouse)
+    predictions = add_ranges(walk_forward(table, forecasters, first_season))
     predictions["years"] = np.where(predictions["season"] < test_from, "tune", "test")
+    model = predictions["forecaster"] == "shared_model"
+    predictions = predictions.join(walk_forward_chances(predictions[model]))
     scores = pd.concat(
         [
             score(predictions).assign(years="all"),
@@ -272,8 +278,14 @@ def backtest(
         "test": f"Test years, {test_from} on (report these)",
     }
     for years, title in titles.items():
-        table = scores[scores["years"] == years].drop(columns="years")
-        typer.echo(f"\n{title}\n" + table.to_string(index=False, float_format="%.3f"))
+        rows = scores[scores["years"] == years].drop(columns="years")
+        typer.echo(f"\n{title}\n" + rows.to_string(index=False, float_format="%.3f"))
+
+    cover = coverage_table(predictions[model], by=("years", "checkpoint"))
+    cover.to_csv(report.parent / "ranges.csv", index=False, float_format="%.3f")
+    typer.echo("\n80% ranges of the shared model: share of real race paces inside (aim: 0.75-0.85)")
+    typer.echo(cover.to_string(index=False, float_format="%.3f"))
     typer.echo(f"\nSaved {len(predictions):,} guesses to {saved}")
+
 
     

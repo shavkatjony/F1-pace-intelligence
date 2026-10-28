@@ -37,10 +37,10 @@ function presets() { uid = 1; return {
   pitwall: { name: "Pit wall", hint: "3 monitors · race weekend", monitors: [
     [W("session", 5, 5), W("results", 7, 3), W("weather", 7, 2), W("quality", 12, 2)],
     [W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2)],
-    [W("strategy", 6, 5), W("laps", 6, 3), W("standings", 6, 2)]] },
+    [W("forecast", 12, 4), W("strategy", 6, 5), W("laps", 6, 3), W("standings", 6, 2)]] },
   performance: { name: "Performance", hint: "1 large monitor · driver vs driver", monitors: [[W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2)]] },
-  strategy: { name: "Strategy", hint: "long runs, stints and weather", monitors: [[W("laps", 7, 3), W("strategy", 5, 5), W("weather", 7, 2)]] },
-  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
+  strategy: { name: "Strategy", hint: "forecast, long runs, stints and weather", monitors: [[W("forecast", 7, 4), W("strategy", 5, 6), W("laps", 7, 3), W("weather", 7, 2)]] },
+  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("forecast", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
 let st = { ctx: { ...DEF_CTX }, set: { ...DEF_SET }, preset: "pitwall", mon: 0, tab: 0, layouts: presets() };
 const KEY = "dpec-pitwall-app-v1";
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.layouts) { st = { ...st, ...s, ctx: { ...DEF_CTX, ...s.ctx }, set: { ...DEF_SET, ...s.set } }; uid = 1 + Math.max(0, ...Object.values(st.layouts).flatMap(p => p.monitors.flat()).map(w => +w.id.slice(1) || 0)) } } catch (e) { }
@@ -285,6 +285,46 @@ def("results", { title: "Results", mart: "core_results", color: "var(--brown)", 
         return `<tr class="click ${d.driver_code === c.primary ? "p1" : d.driver_code === c.compare ? "p2" : ""}" data-code="${d.driver_code}"><td>${d.finish_position ?? "–"}</td><td>${chip(d.lineage)}<span class="drv">${d.driver_code}</span>${ours(d.lineage)}</td><td class="note">${esc(d.team)}</td>
         ${race ? `<td class="num">${d.grid_position || "pit"}</td><td class="num ${gain > 0 ? "pos" : gain < 0 ? "neg" : ""}">${gain == null ? "" : gain > 0 ? "+" + gain : gain}</td><td class="note">${esc(d.status)}</td><td class="num">${d.points || ""}</td>` : ""}</tr>` }).join("")}</tbody></table>`;
     pickRow(i) } });
+
+const CHECKPOINTS = [["after_practice", "After practice"], ["after_quali", "After quali"]];
+const pct = (v, d = 2) => v == null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(d) + "%";
+const chance = v => v == null ? "—" : Math.round(100 * v) + "%";
+def("forecast", { title: "Race pace forecast", mart: "data/forecasts · shared model", color: "var(--plum)", chart: true, deps: ["primary", "compare"],
+  hint: "Forecasts are made by: uv run dpec backtest (Lesson 15).",
+  key: c => `${wk(c)}/forecast`, load: c => get(`${wk(c)}/forecast`),
+  render(i, D, c) { const w = i.body.clientWidth, h = i.body.clientHeight; if (w < 50 || h < 50) return;
+    const cp = i.state.cp || "after_quali", rows = D.filter(d => d.checkpoint === cp), ranged = rows.filter(d => d.low != null);
+    const inside = ranged.filter(d => d.actual >= d.low && d.actual <= d.high).length;
+    i.tb.innerHTML = `<div class="seg" data-seg="cp">${CHECKPOINTS.map(([v, l]) => `<button aria-pressed="${v === cp}" data-v="${v}">${l}</button>`).join("")}</div>
+      <span>Race pace, % behind the fastest car · bar = 80% range · ◆ = what happened</span>
+      <span>${ranged.length ? `Inside the range: <b>${inside} of ${ranged.length}</b> (aim 80%)` : "No range yet: the first 5 forecast weekends only teach the ranges"}</span>`;
+    if (!rows.length) { i.body.innerHTML = `<div class="pad note">No forecast at this checkpoint.</div>`; return }
+    const side = w > 620, fw = side ? Math.round(w * .64) : w, pl = 74, pr = 14, top = 8, bot = 24, rh = (h - top - bot) / rows.length;
+    const lo = Math.min(0, ...rows.map(d => Math.min(d.low ?? d.predicted, d.actual))) - .1, hi = Math.max(...rows.map(d => Math.max(d.high ?? d.predicted, d.actual))) + .1;
+    const X = scale(lo, hi, pl, fw - pr); let out = "";
+    ticks(lo, hi, 5).forEach(t => out += `<line class="grid" x1="${X(t)}" x2="${X(t)}" y1="${top}" y2="${h - bot}"/><text x="${X(t)}" y="${h - 8}" text-anchor="middle">${t > 0 ? "+" : ""}${t}%</text>`);
+    rows.forEach((d, k) => { const y = top + rh * (k + .5), mine = SETTINGS && d.lineage === SETTINGS.adopted_lineage, out_of = d.low != null && (d.actual < d.low || d.actual > d.high);
+      const mark = d.driver_code === c.primary ? "var(--s1)" : d.driver_code === c.compare ? "var(--s2)" : null, r = Math.max(2.5, Math.min(5, rh * .28));
+      out += `<g data-code="${d.driver_code}" style="cursor:pointer"><title>${d.driver_code}: forecast ${pct(d.predicted)}${d.low != null ? ` (80% range ${pct(d.low)} to ${pct(d.high)})` : ""}, real ${pct(d.actual)}${d.p_top3 != null ? `, top-3 race pace ${chance(d.p_top3)}` : ""}</title>
+        <rect x="0" y="${y - rh / 2}" width="${fw}" height="${rh}" fill="transparent"/>${mark ? `<rect x="0" y="${y - rh / 2 + 1}" width="4" height="${rh - 2}" fill="${mark}"/>` : ""}
+        <text x="10" y="${y + 4}" class="${mark || mine ? "val" : ""}">${k + 1}. ${d.driver_code}${mine ? " ★" : ""}</text>`;
+      if (d.low != null) out += `<line x1="${X(d.low)}" x2="${X(d.high)}" y1="${y}" y2="${y}" stroke="${teamColour(d.lineage)}" stroke-width="${Math.max(3, Math.min(9, rh * .45))}" stroke-linecap="round" opacity="${mine ? .95 : .55}"/>`;
+      out += `<circle cx="${X(d.predicted)}" cy="${y}" r="${r}" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/>`;
+      out += `<path d="M${X(d.actual)},${y - r - 1}l${r + 1},${r + 1}l-${r + 1},${r + 1}l-${r + 1},-${r + 1}z" fill="${out_of ? "var(--red)" : "var(--ink)"}"/></g>` });
+    let card = "";
+    const p = rows.find(d => d.driver_code === c.primary);
+    if (side && p) { const rank = [...rows].sort((a, b) => a.actual - b.actual).findIndex(d => d === p) + 1;
+      const line = (label, value, cls = "") => `<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted var(--line);padding:3px 0"><span class="note">${label}</span><b class="${cls}">${value}</b></div>`;
+      card = `<div class="pad" style="position:absolute;top:0;right:0;width:${w - fw - 8}px;padding-top:10px">
+        <div style="margin-bottom:6px">${chip(p.lineage)}<span class="drv">${p.driver_code}</span>${ours(p.lineage)}</div>
+        ${line("Forecast", pct(p.predicted))}${line("80% range", p.low != null ? `${pct(p.low)} to ${pct(p.high)}` : "not yet")}
+        ${line("What happened", pct(p.actual), p.low != null && (p.actual < p.low || p.actual > p.high) ? "neg" : "")}
+        ${line("Chance of the best race pace", chance(p.p_best))}${line("Chance of a top-3 race pace", chance(p.p_top3))}
+        ${line("Chance to beat his teammate", chance(p.p_beats_teammate))}${line("Expected pace rank", p.mean_rank != null ? p.mean_rank.toFixed(1) : "—")}
+        ${line("Real pace rank", rank)}${line("Grid → finish", `${p.grid_position || "pit"} → ${p.finish_position ?? "–"}`)}
+        <p class="note" style="margin-top:8px">Made before the race with only what was known then (${cp === "after_quali" ? "practice and qualifying" : "practice only"}). Race pace = median clean lap.</p></div>` }
+    i.body.innerHTML = svg(fw, h, out) + card; pickRow(i) },
+  seg(i, k, v) { i.state.cp = v; schedule(i) } });
 
 /* ================= window chrome ================= */
 const ICONS = {
