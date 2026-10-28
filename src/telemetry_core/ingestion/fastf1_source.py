@@ -38,6 +38,14 @@ def session_names(season: int, round_no: int) -> tuple[str, list[str]]:
             names.append(name)
     return event["EventName"], names
 
+def session_start(season: int, round_no: int, session_name: str) -> pd.Timestamp:
+    """When a session starts (UTC), from the official schedule. session_name: e.g. 'Race'."""
+    event = fastf1.get_event(season, round_no)
+    for i in range(1, 6):
+        if event[f"Session{i}"] == session_name:
+            start = pd.Timestamp(event[f"Session{i}DateUtc"])
+            return start.tz_localize("UTC") if start.tzinfo is None else start
+    raise ValueError(f"{season} round {round_no} has no session called {session_name!r}")
 
 def _per_driver(data: dict) -> pd.DataFrame:
     """car_data and pos_data come as {car number: table}. Stack them into one table."""

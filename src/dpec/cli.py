@@ -288,4 +288,264 @@ def backtest(
     typer.echo(f"\nSaved {len(predictions):,} guesses to {saved}")
 
 
-    
+@app.command()
+def replay(
+    first_season: int = typer.Option(2023, help="First season to replay; earlier ones only teach"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """Replay every past dry race: the tyre and stop decision the packet would have made before
+    it, next to what happened. Scored on tyre wear, stops and first-stop windows."""
+    from dpec.decisions.replay import replay_all, score
+
+    s = load_settings(config)
+    replayed, _ = replay_all(s.paths.warehouse, first_season)
+    saved = s.paths.data / "forecasts" / "decisions.parquet"  # rebuildable, not in git
+    saved.parent.mkdir(parents=True, exist_ok=True)
+    replayed.to_parquet(saved, index=False)
+    scores = score(replayed)
+    report = Path("reports/backtest/decisions.csv")  # small: kept in git as evidence
+    report.parent.mkdir(parents=True, exist_ok=True)
+    scores.to_csv(report, index=False, float_format="%.3f")
+    typer.echo(scores.to_string(index=False, float_format="%.3f"))
+    typer.echo(f"\nSaved {len(replayed)} replayed races to {saved}")
+
+@app.command()
+def packet(
+    season: int = typer.Option(..., help="Season of the race"),
+    round_no: int = typer.Option(..., "--round", help="Round of the race"),
+    checkpoint: str = typer.Option("after_quali", help="after_practice or after_quali"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """Write one past race's decision packet to reports/packets: race pace, tyres, the stop
+    plan, what could make it wrong, and what happened."""
+    from dpec.decisions.packet import file_name, make_packet, to_markdown
+
+    s = load_settings(config)
+    forecasts = s.paths.data / "forecasts" / "backtest.parquet"
+    try:
+        p = make_packet(s.paths.warehouse, forecasts, season, round_no, s.adopted_team, checkpoint)
+    except ValueError as problem:
+        typer.echo(str(problem), err=True)
+        raise typer.Exit(1) from None
+    page = to_markdown(p)
+    out = Path("reports/packets") / file_name(p)  # small: kept in git as evidence
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8")
+    typer.echo(page)
+    typer.echo(f"Saved: {out}")
+
+@app.command()
+def freeze(
+    season: int = typer.Option(..., help="Season of the race"),
+    round_no: int = typer.Option(..., "--round", help="Round of the race"),
+    checkpoint: str = typer.Option(
+        "after_quali", help="after_quali (before the race) or after_practice (before quali)"
+    ),
+    race_laps: int | None = typer.Option(None, help="Race length in laps, only at a new circuit"),
+    dry_run: bool = typer.Option(
+        False, help="Any weekend, past ones too: saved in reports/dry-runs, never in ledger/"
+    ),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """Freeze this weekend's forecast and tyre decision into ledger/ before the session starts.
+    Then commit and push it at once: GitHub's time on the push is the proof."""
+    from dpec.record.freeze import TooLate, check_deadline, describe, make_forecast
+    from dpec.record.ledger import LEDGER, event_folder, write_once
+
+    s = load_settings(config)
+    fastf1_source.enable_cache(s.paths.cache)
+    try:
+        record = make_forecast(
+            s.paths.warehouse,
+            season,
+            round_no,
+            checkpoint,
+            s.adopted_team,
+            race_laps,
+            check_time=not dry_run,
+        )
+        root = Path("reports/dry-runs") if dry_run else LEDGER
+        path = event_folder(root, season, round_no, record.circuit) / f"{checkpoint}.json"
+        write_once(record, path, overwrite=dry_run)
+    except (ValueError, KeyError, TooLate, FileExistsError) as problem:
+        typer.echo(str(problem), err=True)
+        raise typer.Exit(1) from None
+    typer.echo(describe(record))
+    typer.echo(f"\nSaved: {path}")
+    if dry_run:
+        try:
+            check_deadline(record.frozen_at_utc, record.target_start_utc)
+        except TooLate as late:
+            typer.echo(f"Dry run. A real freeze now would be refused: {late}")
+    else:
+        typer.echo("Now commit and push it, before the deadline:")
+        typer.echo(f'  git add {path} && git commit -m "Freeze {path.parent.name}" && git push')
+
+
+@app.command()
+def score(
+    season: int = typer.Option(..., help="Season of the race"),
+    round_no: int = typer.Option(..., "--round", help="Round of the race"),
+    dry_run: bool = typer.Option(False, help="Score a dry run in reports/dry-runs instead"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """Score a frozen weekend after the race: writes score.json next to the frozen files,
+    which it never changes."""
+    from dpec.record.ledger import LEDGER, write_once
+    from dpec.record.score import score_weekend, summary
+
+    s = load_settings(config)
+    root = Path("reports/dry-runs") if dry_run else LEDGER
+    folders = sorted((root / str(season)).glob(f"{round_no:02d}-*"))
+    if not folders:
+        typer.echo(f"nothing frozen for {season} round {round_no} in {root}/", err=True)
+        raise typer.Exit(1)
+    try:
+        result = score_weekend(s.paths.warehouse, folders[0])
+        write_once(result, folders[0] / "score.json", overwrite=dry_run)
+    except (ValueError, FileExistsError) as problem:
+        typer.echo(str(problem), err=True)
+        raise typer.Exit(1) from None
+    typer.echo(summary(result).to_string(index=False, float_format="%.3f"))
+    for checkpoint in result.checkpoints:
+        for car in checkpoint.our_cars:
+            where = {True: "inside", False: "outside", None: "no"}[car.inside_range]
+            typer.echo(
+                f"{checkpoint.checkpoint}: {car.driver_code} ★ forecast "
+                f"{car.predicted_gap_pct:+.2f}%, race {car.actual_gap_pct:+.2f}% ({where} range)"
+            )
+    d = result.decision
+    if d:
+        right = {True: "right", False: "wrong", None: "not known"}[d.stops_right]
+        typer.echo(
+            f"Decision '{d.call}': top 10 made {d.actual_top10_stops} stop(s), {right}; "
+            f"tyre wear {d.actual_tyre_wear} (inside range: {d.tyre_wear_inside_range}); "
+            f"first stops inside the window: {d.inside_window} of {d.green_first_stops}"
+        )
+    typer.echo(f"Verdict: {result.verdict}")
+    typer.echo(f"Saved: {folders[0] / 'score.json'}")
+
+
+@app.command()
+def ledger(
+    since: str | None = typer.Option(
+        None, help="A commit: fail if a ledger file changed or was deleted since then"
+    ),
+    late_check: bool = typer.Option(
+        False, help="CI only: forecasts added since --since must arrive before their deadline"
+    ),
+) -> None:
+    """Check the public record: every file valid, and unchanged since it was frozen."""
+    import subprocess
+    from datetime import UTC, datetime
+
+    from dpec.record.ledger import LEDGER, git_changes, late, problems
+
+    found = problems()
+    if since and set(since) != {"0"}:  # all zeros: a new branch, nothing to compare with
+        try:
+            changes = git_changes(since)
+        except subprocess.CalledProcessError:
+            typer.echo(f"commit {since} isn't in the history (was it rewritten?)", err=True)
+            raise typer.Exit(1) from None
+        found += [
+            f"{path}: changed or deleted after it was pushed" for st, path in changes if st != "A"
+        ]
+        if late_check:
+            added = [Path(path) for st, path in changes if st == "A"]
+            found += late(added, datetime.now(UTC))
+    files = len(list(LEDGER.rglob("*.json")))
+    for problem in found:
+        typer.echo(problem)
+    if found:
+        typer.echo(f"\n{len(found)} problem(s) in the ledger ({files} files)")
+        raise typer.Exit(1)
+    typer.echo(f"Ledger OK: {files} files, every one as it was frozen")
+
+
+@app.command()
+def pretend(
+    season: int = typer.Option(..., help="A past season: every dry race in it is frozen and scored"),
+    checkpoint: str = typer.Option("after_quali", help="after_quali or after_practice"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """A pretend ledger: freeze and score every dry race of a past season the live way (as dry
+    runs, in reports/dry-runs). It must match the backtest and the replay: same numbers."""
+    import pandas as pd
+
+    from dpec.forecasting.targets import forecast_table
+    from dpec.record.freeze import make_forecast
+    from dpec.record.ledger import event_folder, write_once
+    from dpec.record.score import score_weekend
+
+    s = load_settings(config)
+    table = forecast_table(s.paths.warehouse)
+    races = table.loc[table["season"] == season, ["round", "circuit"]].drop_duplicates()
+    rows, frozen = [], []
+    for race in races.itertuples():
+        f = make_forecast(
+            s.paths.warehouse, season, race.round, checkpoint, s.adopted_team, check_time=False
+        )
+        folder = event_folder(Path("reports/dry-runs"), season, race.round, f.circuit)
+        write_once(f, folder / f"{checkpoint}.json", overwrite=True)
+        result = score_weekend(s.paths.warehouse, folder)
+        write_once(result, folder / "score.json", overwrite=True)
+        c, d = result.checkpoints[-1], result.decision
+        rows.append(
+            {
+                "round": race.round,
+                "circuit": race.circuit,
+                "drivers": c.drivers_scored,
+                "error_pct": c.mae_pct,
+                "skill": c.skill_vs_team_form,
+                "inside_range": c.inside_range,
+                "call": d.call if d else "-",
+                "stops_right": d.stops_right if d else None,
+                "verdict": result.verdict,
+            }
+        )
+        frozen += [
+            {"round": race.round, "driver_code": x.driver_code, "frozen": x.predicted_gap_pct}
+            for x in f.drivers
+        ]
+        typer.echo(f"  round {race.round:>2} {race.circuit:<16} {result.verdict}")
+    out = pd.DataFrame(rows)
+    report = Path("reports/pretend-ledger") / f"{season}-{checkpoint}.csv"  # small: kept in git
+    report.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(report, index=False, float_format="%.4f")
+    typer.echo("\n" + out.to_string(index=False, float_format="%.3f"))
+    typer.echo(f"\nVerdicts: {out['verdict'].value_counts().to_dict()}")
+
+    saved = s.paths.data / "forecasts" / "backtest.parquet"
+    if saved.exists():  # same code path as the backtest, so the same numbers
+        bt = pd.read_parquet(saved)
+        bt = bt[
+            (bt["forecaster"] == "shared_model")
+            & (bt["season"] == season)
+            & (bt["checkpoint"] == checkpoint)
+        ]
+        both = pd.DataFrame(frozen).merge(bt, on=["round", "driver_code"])
+        gap = (both["frozen"] - both["predicted"]).abs().max()
+        error = (both["frozen"] - both["actual"]).abs().mean()
+        typer.echo(
+            f"Against the backtest: {len(both)} drivers in both, largest difference "
+            f"{gap:.4f}% (rounding), error {error:.3f}% here vs "
+            f"{(both['predicted'] - both['actual']).abs().mean():.3f}% in the backtest"
+        )
+    typer.echo(f"Saved: {report}")
+
+
+@app.command()
+def schema() -> None:
+    """Write the ledger's file formats to schemas/ as JSON Schema: anyone can check a frozen
+    file against them without running this project."""
+    import json
+
+    from dpec.record.ledger import Forecast, Score
+
+    folder = Path("schemas")
+    folder.mkdir(exist_ok=True)
+    for name, model in {"forecast": Forecast, "score": Score}.items():
+        path = folder / f"{name}.schema.json"
+        path.write_text(json.dumps(model.model_json_schema(), indent=2) + "\n", encoding="utf-8")
+        typer.echo(f"Saved: {path}")

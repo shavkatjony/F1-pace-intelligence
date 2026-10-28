@@ -45,14 +45,6 @@ def add_ranges(
 def coverage_table(predictions: pd.DataFrame, by: tuple = ("checkpoint",)) -> pd.DataFrame:
     """How often the real race pace landed inside the range, and how wide the range was (in %
     of a lap). Rows without a range yet are left out."""
-    # Lesson 15, Part 2 [You]: one row per group in `by`, with the columns
-    # rows (how many rows), inside (share of rows with actual between low and high),
-    # width_pct (mean of high - low). Leave out rows where low is empty.
-    raise NotImplementedError
-
-def coverage_table(predictions: pd.DataFrame, by: tuple = ("checkpoint",)) -> pd.DataFrame:
-    """How often the real race pace landed inside the range, and how wide the range was (in %
-    of a lap). Rows without a range yet are left out."""
     p = predictions.dropna(subset=["low"])
     p = p.assign(inside=p["actual"].between(p["low"], p["high"]), width_pct=p["high"] - p["low"])
     return (

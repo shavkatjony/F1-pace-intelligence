@@ -13,11 +13,19 @@ KEYS = ["season", "round", "weekend", "circuit", "driver_code", "lineage"]
 
 
 def walk_forward(
-    table: pd.DataFrame, forecasters: dict, first_season: int = 2023, min_drivers: int = 8
+    table: pd.DataFrame,
+    forecasters: dict,
+    first_season: int = 2023,
+    min_drivers: int = 8,
+    weekends: list[int] | None = None,
 ) -> pd.DataFrame:
-    """One row per driver, weekend, checkpoint and forecaster: predicted vs actual."""
+    """One row per driver, weekend, checkpoint and forecaster: predicted vs actual.
+    weekends: forecast only these (a live forecast needs only the last few, for its range)."""
     rows = []
-    for _, today in table[table["season"] >= first_season].groupby("weekend", sort=False):
+    chosen = table[table["season"] >= first_season]
+    if weekends is not None:
+        chosen = chosen[chosen["weekend"].isin(weekends)]
+    for _, today in chosen.groupby("weekend", sort=False):
         history = table[table["race_date"] < today["race_date"].iloc[0]]
         if len(today) < min_drivers or history.empty:
             continue

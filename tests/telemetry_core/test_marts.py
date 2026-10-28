@@ -81,6 +81,13 @@ def test_pace_uses_clean_laps_only(marts):
     assert p["best_lap_s"].item() == 95.0
     assert p["gap_to_best_pct"].item() == 0.0
 
+def test_race_strategy_measures_the_pit_stop(marts):
+    s = query(marts, "SELECT * FROM mart_race_strategy ORDER BY round")
+    assert s["round"].tolist() == [1, 2, 3]  # one row per race weekend
+    first = s.iloc[0]
+    assert first["green_stops"] == 1  # in-lap 5 and out-lap 6, both under green flags
+    # in-lap + out-lap - 2 normal laps (the median clean lap: 95.0 and 95.2 -> 95.1)
+    assert first["pit_loss_s"] == pytest.approx(99.0 + 95.1 - 2 * 95.1)
 
 def test_checks_pass_on_good_data(marts):
     raw = marts.parent / "raw"
