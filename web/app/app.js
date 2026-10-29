@@ -39,8 +39,8 @@ function presets() { uid = 1; return {
     [W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2)],
     [W("forecast", 12, 4), W("strategy", 6, 5), W("laps", 6, 3), W("standings", 6, 2)]] },
   performance: { name: "Performance", hint: "1 large monitor · driver vs driver", monitors: [[W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2)]] },
-  strategy: { name: "Strategy", hint: "forecast, long runs, stints and weather", monitors: [[W("forecast", 7, 4), W("strategy", 5, 6), W("laps", 7, 3), W("weather", 7, 2)]] },
-  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("forecast", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
+  strategy: { name: "Strategy", hint: "forecast, record, long runs, stints and weather", monitors: [[W("forecast", 7, 4), W("strategy", 5, 6), W("record", 7, 3), W("laps", 7, 3), W("weather", 5, 2)]] },
+  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("forecast", 12, 5), W("record", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
 let st = { ctx: { ...DEF_CTX }, set: { ...DEF_SET }, preset: "pitwall", mon: 0, tab: 0, layouts: presets() };
 const KEY = "dpec-pitwall-app-v1";
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.layouts) { st = { ...st, ...s, ctx: { ...DEF_CTX, ...s.ctx }, set: { ...DEF_SET, ...s.set } }; uid = 1 + Math.max(0, ...Object.values(st.layouts).flatMap(p => p.monitors.flat()).map(w => +w.id.slice(1) || 0)) } } catch (e) { }
@@ -325,6 +325,30 @@ def("forecast", { title: "Race pace forecast", mart: "data/forecasts · shared m
         <p class="note" style="margin-top:8px">Made before the race with only what was known then (${cp === "after_quali" ? "practice and qualifying" : "practice only"}). Race pace = median clean lap.</p></div>` }
     i.body.innerHTML = svg(fw, h, out) + card; pickRow(i) },
   seg(i, k, v) { i.state.cp = v; schedule(i) } });
+
+const VERDICT = { GOOD: "var(--teal)", OK: "var(--mustard)", MISS: "var(--red)" };
+const hm = m => m == null ? "—" : m >= 2880 ? Math.round(m / 1440) + " days" : m >= 120 ? Math.round(m / 60) + " h" : m + " min";
+def("record", { title: "Public record", mart: "ledger/ · frozen forecasts and scores", color: "var(--teal)", deps: [],
+  hint: "Forecasts are frozen by: uv run dpec freeze (Lesson 17).",
+  key: () => "/record", load: () => Promise.all([get("/record"), get("/record?source=dry-runs")]).then(([ledger, dry]) => ({ ledger, "dry-runs": dry })),
+  render(i, all, c) { const src = i.state.src || "ledger", D = all[src], scored = D.filter(d => d.verdict);
+    const count = v => scored.filter(d => d.verdict === v).length;
+    i.tb.innerHTML = `<div class="seg" data-seg="src">${[["ledger", "Live record"], ["dry-runs", "Dry runs"]].map(([v, l]) => `<button aria-pressed="${v === src}" data-v="${v}">${l}</button>`).join("")}</div>
+      <span>${src === "ledger" ? "Frozen before the session, pushed to GitHub, never edited" : "Made after the fact, to test the pipeline: not the record"}</span>
+      <span>${scored.length ? `<b style="color:${VERDICT.GOOD}">${count("GOOD")} good</b> · <b style="color:${VERDICT.OK}">${count("OK")} ok</b> · <b style="color:${VERDICT.MISS}">${count("MISS")} miss</b>` : "No scores yet"}</span>`;
+    if (!D.length) { i.body.innerHTML = `<div class="pad note">${src === "ledger" ? "Nothing frozen yet. Before a race: <b>uv run dpec freeze --season 2026 --round N</b>, then commit and push." : "No dry runs yet: <b>uv run dpec pretend --season 2026</b>."}</div>`; return }
+    i.body.innerHTML = `<table class="tt"><thead><tr><th>Weekend</th><th>Frozen</th><th>Our cars: forecast → race</th><th>Tyres and stops</th><th class="num">Error</th><th class="num">Inside</th><th>Verdict</th></tr></thead><tbody>${
+      D.map(d => { const f = d.frozen[d.frozen.length - 1], here = d.season === c.season && d.round === c.round;
+        const cars = d.ours.map(o => `${o.driver_code} ${pct(o.predicted)}${d.our_actual && d.our_actual[o.driver_code] != null ? ` → ${pct(d.our_actual[o.driver_code])}` : ""}`).join("<br>");
+        return `<tr class="click ${here ? "p1" : ""}" data-season="${d.season}" data-round="${d.round}" title="sha256 ${f.sha256.slice(0, 12)}…${d.intact ? " · unchanged since frozen" : " · CHANGED after it was frozen"}">
+          <td><b>${d.season} R${d.round}</b> <span class="note">${esc(d.circuit)}</span>${d.intact ? "" : ' <b class="neg">edited!</b>'}</td>
+          <td class="note">${f.checkpoint === "after_quali" ? "after quali" : "after practice"}, ${f.minutes_early >= 0 ? hm(f.minutes_early) + " early" : `<span class="neg">${hm(-f.minutes_early)} late</span>`}</td>
+          <td class="note">${cars || "—"}</td><td class="note">${esc(d.call || "—")}${d.stops_right == null ? "" : d.stops_right ? ' <span class="pos">✓</span>' : ' <span class="neg">✗</span>'}</td>
+          <td class="num">${d.error_pct == null ? "—" : d.error_pct.toFixed(2) + "%"}</td><td class="num">${d.inside_range == null ? "—" : Math.round(100 * d.inside_range) + "%"}</td>
+          <td>${d.verdict ? `<b style="color:${VERDICT[d.verdict]}">${d.verdict}</b>` : '<span class="note">waiting for the race</span>'}</td></tr>` }).join("")}</tbody></table>
+      <p class="note pad">Error = average distance between forecast and real race pace, % of a lap (backtest: 0.55% after quali). Inside = share of real paces inside the 80% range (aim 80%). Click a row to open that weekend.</p>`;
+    i.body.onclick = e => { const r = e.target.closest("[data-round]"); if (r) go(+r.dataset.season, +r.dataset.round, st.ctx) } },
+  seg(i, k, v) { i.state.src = v; schedule(i) } });
 
 /* ================= window chrome ================= */
 const ICONS = {
