@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -13,3 +14,15 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run pytest -q
+
+  ledger:
+    # Protect frozen forecasts and enforce publication deadlines.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run dpec ledger --since "${{ github.event.before }}" --late-check
