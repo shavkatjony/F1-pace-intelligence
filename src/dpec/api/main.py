@@ -10,7 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from dpec.api.routes import analytics, forecasts
+from dpec.api.routes import analytics, forecasts, record
 from telemetry_core.config import load_settings
 
 WEB_APP = Path("web/app")
@@ -27,6 +27,7 @@ def create_app(config: str = "config/dpec.yaml") -> FastAPI:
     app.state.settings = load_settings(config)
     app.include_router(analytics.router, prefix="/api")
     app.include_router(forecasts.router, prefix="/api")
+    app.include_router(record.router, prefix="/api")
     if WEB_APP.exists():  # the app's own files; /api/... above is matched first
         app.mount("/", StaticFiles(directory=WEB_APP, html=True), name="app")
     return app
