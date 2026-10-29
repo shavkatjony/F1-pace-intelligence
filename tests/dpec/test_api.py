@@ -159,3 +159,16 @@ def test_forecast_shows_the_saved_guesses(client, tmp_path):
     assert f[0]["finish_position"] == 1 and f[0]["p_beats_teammate"] is None
     assert client.get("/api/weekends/2022/1/forecast").status_code == 404
     
+def test_record_lists_frozen_weekends(client, tmp_path, monkeypatch):
+    from test_record import fake_forecast
+
+    from dpec.record.ledger import write_once
+
+    monkeypatch.chdir(tmp_path)  # the app reads ledger/ from the folder it runs in
+    assert client.get("/api/record").json() == []
+    write_once(fake_forecast(), Path("ledger/2026/19-test/after_quali.json"))
+    r = client.get("/api/record").json()
+    assert [(d["round"], d["intact"], d["verdict"]) for d in r] == [(19, True, None)]
+    assert r[0]["frozen"][0]["minutes_early"] == 20 * 60
+    assert [o["driver_code"] for o in r[0]["ours"]] == ["D0", "D1"]
+    
