@@ -31,3 +31,12 @@ reports/figures/
 
 # Dry runs of the public record (made after the fact: not the record)
 reports/dry-runs/
+cp ~/f2/lesson-17-files/src/dpec/cli.py src/dpec/cli.py
+cp ~/f2/lesson-17-files/Makefile Makefile
+cat >> .gitignore <<'EOF'
+
+# Dry runs of the public record (made after the fact: not the record)
+reports/dry-runs/
+
+# Dry runs of the public record (made after the fact: not the record)
+reports/dry-runs/
