@@ -242,3 +242,6 @@ body.solo .ws{grid-auto-rows:calc((100vh - 70px)/5)}
 .err small{display:block;color:var(--muted);margin-top:6px}
 .live{font:700 12px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;background:var(--teal);color:var(--panel);padding:5px 8px;border-radius:4px}
 .tt td.dim{color:var(--muted)}
+
+/* Debrief window (Lesson 18): small headings over each half */
+.win-b h4{font:700 13px/1.3 var(--f-label);letter-spacing:.08em;text-transform:uppercase;margin:2px 0 6px;color:var(--ink)}

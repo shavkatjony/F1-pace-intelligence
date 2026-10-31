@@ -38,9 +38,9 @@ function presets() { uid = 1; return {
     [W("session", 5, 5), W("results", 7, 3), W("weather", 7, 2), W("quality", 12, 2)],
     [W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2)],
     [W("forecast", 12, 4), W("strategy", 6, 5), W("laps", 6, 3), W("standings", 6, 2)]] },
-  performance: { name: "Performance", hint: "1 large monitor · driver vs driver", monitors: [[W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2)]] },
+  performance: { name: "Performance", hint: "1 large monitor · driver vs driver", monitors: [[W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2), W("debrief", 12, 3)]] },
   strategy: { name: "Strategy", hint: "forecast, record, long runs, stints and weather", monitors: [[W("forecast", 7, 4), W("strategy", 5, 6), W("record", 7, 3), W("laps", 7, 3), W("weather", 5, 2)]] },
-  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("forecast", 12, 5), W("record", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
+  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("forecast", 12, 5), W("record", 12, 5), W("debrief", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
 let st = { ctx: { ...DEF_CTX }, set: { ...DEF_SET }, preset: "pitwall", mon: 0, tab: 0, layouts: presets() };
 const KEY = "dpec-pitwall-app-v1";
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.layouts) { st = { ...st, ...s, ctx: { ...DEF_CTX, ...s.ctx }, set: { ...DEF_SET, ...s.set } }; uid = 1 + Math.max(0, ...Object.values(st.layouts).flatMap(p => p.monitors.flat()).map(w => +w.id.slice(1) || 0)) } } catch (e) { }
@@ -349,6 +349,30 @@ def("record", { title: "Public record", mart: "ledger/ · frozen forecasts and s
       <p class="note pad">Error = average distance between forecast and real race pace, % of a lap (backtest: 0.55% after quali). Inside = share of real paces inside the 80% range (aim 80%). Click a row to open that weekend.</p>`;
     i.body.onclick = e => { const r = e.target.closest("[data-round]"); if (r) go(+r.dataset.season, +r.dataset.round, st.ctx) } },
   seg(i, k, v) { i.state.src = v; schedule(i) } });
+
+const PART_LABEL = { pace: "Pace", tyre_age: "Older tyres", tyre_compound: "Harder tyres", a_traffic: "Traffic: A", b_traffic: "Traffic: B" };
+function splitBars(rows, label, value, lo, hi, w) { // one row per part: a bar from 0, and the 80% range as a line
+  const vals = rows.flatMap(r => [r[value], lo ? r[lo] : null, hi ? r[hi] : null]).filter(v => v != null);
+  const m = Math.max(0.05, ...vals.map(Math.abs)), pl = 150, pr = 54, rh = 22, h = rows.length * rh + 22, X = scale(-m, m, pl, w - pr); let out = "";
+  ticks(-m, m, 4).forEach(v => out += `<line class="grid" x1="${X(v)}" x2="${X(v)}" y1="4" y2="${h - 16}"/><text x="${X(v)}" y="${h - 3}" text-anchor="middle">${v > 0 ? "+" : ""}${v}</text>`);
+  rows.forEach((r, k) => { const y = 6 + k * rh, v = r[value];
+    out += `<text x="${pl - 8}" y="${y + 13}" text-anchor="end">${esc(label(r))}</text>`;
+    if (v == null) { out += `<text x="${X(0) + 6}" y="${y + 13}" class="note">not measured</text>`; return }
+    out += `<rect x="${Math.min(X(0), X(v))}" y="${y + 4}" width="${Math.abs(X(v) - X(0))}" height="${rh - 9}" rx="2" fill="${v > 0 ? "var(--s1)" : "var(--s2)"}" opacity=".85"/>`;
+    if (lo && r[lo] != null) out += `<line x1="${X(r[lo])}" x2="${X(r[hi])}" y1="${y + rh / 2}" y2="${y + rh / 2}" stroke="var(--ink)" stroke-width="1.5"/><line x1="${X(r[lo])}" x2="${X(r[lo])}" y1="${y + 6}" y2="${y + rh - 6}" stroke="var(--ink)"/><line x1="${X(r[hi])}" x2="${X(r[hi])}" y1="${y + 6}" y2="${y + rh - 6}" stroke="var(--ink)"/>`;
+    out += `<text x="${w - 4}" y="${y + 13}" text-anchor="end" class="val">${sgn(v)}</text>` });
+  out += `<line x1="${X(0)}" x2="${X(0)}" y1="2" y2="${h - 16}" stroke="var(--line-strong)"/>`;
+  return svg(w, h, out) }
+def("debrief", { title: "Debrief", mart: "distance grid · core_laps", color: "var(--rose)", deps: ["primary", "compare"],
+  hint: "The debrief is built in Lesson 18.",
+  key: c => `${wk(c)}/debrief/${c.session}/${c.primary}/${c.compare}`, load: c => get(`${wk(c)}/debrief?session=${c.session}&a=${c.primary}&b=${c.compare}`),
+  render(i, D, c) { const w = Math.max(260, i.body.clientWidth - 16), two = w > 760, cw = two ? Math.floor((w - 16) / 2) : w;
+    i.tb.innerHTML = `<span><b style="color:var(--s1)">A ${D.a}</b> against <b style="color:var(--s2)">B ${D.b}</b> · + = A loses time, − = A gains</span>`;
+    const lap = D.lap ? `<h4>Best laps of ${SESSION_NAMES[D.session]}: A ${D.lap.gap_s >= 0 ? "slower" : "faster"} by ${Math.abs(D.lap.gap_s).toFixed(3)} s</h4>${splitBars(D.lap.parts, r => `${r.kind} (${Math.round(100 * r.share_of_lap)}%)`, "seconds", null, null, cw)}<p class="note">Each 5 m of the gap goes to what B's car was doing there. The parts add up to the whole gap.</p>`
+      : `<h4>Best laps of ${SESSION_NAMES[D.session]}</h4><p class="note">${esc(D.lap_note)}</p>`;
+    const race = D.race ? `<h4>Race: A ${D.race.gap_s >= 0 ? "slower" : "faster"} by ${Math.abs(D.race.gap_s).toFixed(3)} s a lap (${D.race.laps} laps both clean)</h4>${splitBars(D.race.parts, r => PART_LABEL[r.part], "seconds_per_lap", "low", "high", cw)}<p class="note">Pace = the gap left on equal tyres in clean air. Same lap numbers, so fuel burnt and track grip cancel. Line = 80% range (bootstrap). A in traffic on ${Math.round(100 * D.race.a_traffic_share)}% of these laps.</p>`
+      : `<h4>Race</h4><p class="note">${esc(D.race_note)}</p>`;
+    i.body.innerHTML = `<div class="pad" style="display:grid;grid-template-columns:${two ? "1fr 1fr" : "1fr"};gap:16px">${`<div>${lap}</div><div>${race}</div>`}</div>` } });
 
 /* ================= window chrome ================= */
 const ICONS = {
