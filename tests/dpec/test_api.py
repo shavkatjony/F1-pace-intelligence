@@ -172,3 +172,11 @@ def test_record_lists_frozen_weekends(client, tmp_path, monkeypatch):
     assert r[0]["frozen"][0]["minutes_early"] == 20 * 60
     assert [o["driver_code"] for o in r[0]["ours"]] == ["D0", "D1"]
     
+
+def test_debrief_splits_the_lap_and_says_why_the_race_part_is_missing(client):
+    r = client.get("/api/weekends/2024/1/debrief", params={"a": "ham", "b": "VER", "session": "R"})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["lap"]["gap_s"] == pytest.approx(0.5)  # HAM's laps are 0.5 s slower
+    assert [p["kind"] for p in d["lap"]["parts"]][:2] == ["straight", "braking"]
+    assert d["race"] is None and "laps where both drivers were clean" in d["race_note"]

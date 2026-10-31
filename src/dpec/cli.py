@@ -549,3 +549,28 @@ def schema() -> None:
         path = folder / f"{name}.schema.json"
         path.write_text(json.dumps(model.model_json_schema(), indent=2) + "\n", encoding="utf-8")
         typer.echo(f"Saved: {path}")
+
+@app.command()
+def debrief(
+    season: int = typer.Option(..., help="Season of the race"),
+    round_no: int = typer.Option(..., "--round", help="Round of the race"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """After a race: where our cars' time went. Best qualifying lap split by part of the track,
+    race gap split into pace, tyres and traffic, next to the forecast. Saved in reports/debriefs."""
+    from dpec.debrief.report import file_name, make_debrief, to_markdown
+
+    s = load_settings(config)
+    try:
+        d = make_debrief(
+            s.paths.warehouse, s.paths.raw, s.paths.data, season, round_no, s.adopted_team
+        )
+    except ValueError as problem:
+        typer.echo(str(problem), err=True)
+        raise typer.Exit(1) from None
+    page = to_markdown(d)
+    out = Path("reports/debriefs") / file_name(d)  # small: kept in git as evidence
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8")
+    typer.echo(page)
+    typer.echo(f"Saved: {out}")
