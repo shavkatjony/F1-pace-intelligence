@@ -1,0 +1,335 @@
+# The race engineer's exam (step D2). 50 questions; each answer is computed from the
+# warehouse by its checks (see src/dpec/assistant/evals.py), so it stays right as data grows.
+# kinds: lookup 18, comparison 12, forecast 8, decision 7, trap 5.
+# Run: uv run dpec eval-ai --dry-run   (prints the right answers, no model)
+
+# ---- lookup: one fact from one table ----
+- id: L01
+  kind: lookup
+  question: Who won the 2024 Bahrain Grand Prix?
+  expect:
+    - sql: SELECT winner FROM mart_weekends WHERE season = 2024 AND round = 1
+- id: L02
+  kind: lookup
+  question: Who took pole position for the 2023 Monaco Grand Prix?
+  expect:
+    - sql: SELECT pole FROM mart_weekends WHERE season = 2023 AND circuit = 'Monte Carlo'
+- id: L03
+  kind: lookup
+  question: How many laps did the 2022 Italian Grand Prix at Monza have?
+  expect:
+    - sql: SELECT race_laps FROM mart_weekends WHERE season = 2022 AND circuit = 'Monza'
+- id: L04
+  kind: lookup
+  question: How many laps were run behind the safety car in the 2024 Singapore Grand Prix?
+  expect:
+    - sql: SELECT safety_car_laps FROM mart_weekends WHERE season = 2024 AND circuit = 'Singapore'
+- id: L05
+  kind: lookup
+  question: What was the average track temperature during qualifying at the 2023 Hungarian Grand Prix?
+  expect:
+    - sql: |
+        SELECT round(w.track_temp_c, 1) FROM mart_session_weather AS w
+        JOIN core_sessions USING (session_key)
+        WHERE w.season = 2023 AND circuit = 'Hungaroring' AND w.session_type = 'Q'
+      tol: 0.1
+- id: L06
+  kind: lookup
+  question: How many races in the 2024 season were wet races?
+  expect:
+    - sql: SELECT count(*) FROM mart_weekends WHERE season = 2024 AND is_wet_race
+- id: L07
+  kind: lookup
+  question: What was VER's best clean lap time in qualifying at the 2024 Bahrain Grand Prix, in seconds?
+  expect:
+    - sql: SELECT best_lap_s FROM mart_driver_session_pace WHERE session_key = '2024_01_Q' AND driver_code = 'VER'
+      tol: 0.001
+- id: L08
+  kind: lookup
+  question: How many points did HAM have at the end of the 2023 season?
+  expect:
+    - sql: SELECT total_points FROM mart_standings WHERE season = 2023 AND driver_code = 'HAM' ORDER BY round DESC LIMIT 1
+- id: L09
+  kind: lookup
+  question: Who led the drivers' championship after round 10 of 2025?
+  expect:
+    - sql: SELECT driver_code FROM mart_standings WHERE season = 2025 AND round = 10 AND championship_position = 1
+- id: L10
+  kind: lookup
+  question: How many different drivers started at least one race in 2024?
+  expect:
+    - sql: SELECT count(*) FROM dim_drivers WHERE season = 2024 AND started_a_race
+- id: L11
+  kind: lookup
+  question: How many clean laps did LEC do in the 2024 Italian Grand Prix race?
+  expect:
+    - sql: SELECT clean_laps FROM mart_driver_session_pace WHERE session_key = '2024_16_R' AND driver_code = 'LEC'
+- id: L12
+  kind: lookup
+  question: What was the pit stop time loss at the 2024 British Grand Prix, in seconds?
+  expect:
+    - sql: SELECT pit_loss_s FROM mart_race_strategy WHERE season = 2024 AND circuit = 'Silverstone'
+      tol: 0.1
+- id: L13
+  kind: lookup
+  question: How many pit stops did the top 10 typically make at the 2023 Spanish Grand Prix?
+  expect:
+    - sql: SELECT top10_stops FROM mart_race_strategy WHERE season = 2023 AND circuit = 'Catalunya'
+- id: L14
+  kind: lookup
+  question: What was the highest track temperature during the 2025 Abu Dhabi Grand Prix race?
+  expect:
+    - sql: |
+        SELECT round(track_temp_max_c, 1) FROM mart_session_weather
+        WHERE session_key = '2025_24_R'
+      tol: 0.1
+- id: L15
+  kind: lookup
+  question: How many sessions from the 2022 season are saved in the warehouse?
+  expect:
+    - sql: SELECT count(*) FROM core_sessions WHERE season = 2022
+- id: L16
+  kind: lookup
+  question: What was the fastest speed trap reading in qualifying at the 2024 Italian Grand Prix, and who set it?
+  expect:
+    - sql: SELECT max(speed_trap_kph) FROM core_laps WHERE session_key = '2024_16_Q'
+      tol: 0.1
+    - sql: SELECT arg_max(driver_code, speed_trap_kph) FROM core_laps WHERE session_key = '2024_16_Q'
+- id: L17
+  kind: lookup
+  question: Who finished third in the 2025 Japanese Grand Prix?
+  expect:
+    - sql: SELECT driver_code FROM core_results WHERE session_key = '2025_03_R' AND finish_position = 3
+- id: L18
+  kind: lookup
+  question: How much faster did the track get per 10 minutes in FP2 at the 2024 Bahrain Grand Prix?
+  expect:
+    - sql: SELECT evo_s_per_10min FROM mart_track_evolution WHERE session_key = '2024_01_FP2'
+      tol: 0.01
+
+# ---- comparison: two drivers, teams or sessions ----
+- id: C01
+  kind: comparison
+  question: In qualifying at the 2024 Bahrain Grand Prix, who had the faster best clean lap, VER or LEC, and by how many seconds?
+  expect:
+    - sql: |
+        SELECT arg_min(driver_code, best_lap_s) FROM mart_driver_session_pace
+        WHERE session_key = '2024_01_Q' AND driver_code IN ('VER', 'LEC')
+    - sql: |
+        SELECT max(best_lap_s) - min(best_lap_s) FROM mart_driver_session_pace
+        WHERE session_key = '2024_01_Q' AND driver_code IN ('VER', 'LEC')
+      tol: 0.005
+- id: C02
+  kind: comparison
+  question: Which driver had the best race pace at the 2023 Italian Grand Prix?
+  expect:
+    - sql: SELECT arg_min(driver_code, race_pace_gap_pct) FROM mart_weekend_signals WHERE season = 2023 AND round = 14
+- id: C03
+  kind: comparison
+  question: At the 2024 British Grand Prix, how far apart were HAM's and RUS's race pace, in percent?
+  expect:
+    - sql: |
+        SELECT abs(max(race_pace_gap_pct) - min(race_pace_gap_pct)) FROM mart_weekend_signals
+        WHERE season = 2024 AND round = 12 AND driver_code IN ('HAM', 'RUS')
+      tol: 0.02
+- id: C04
+  kind: comparison
+  question: Which of the two Mercedes drivers qualified ahead at the 2025 Monaco Grand Prix?
+  expect:
+    - sql: |
+        SELECT arg_min(driver_code, grid_position) FROM mart_weekend_signals
+        WHERE season = 2025 AND round = 8 AND team = 'Mercedes'
+- id: C05
+  kind: comparison
+  question: In qualifying at the 2024 Bahrain Grand Prix, in which kind of track section did LEC lose the most time to VER on their best laps?
+  expect:
+    - tool: lap_split
+      args: {season: 2024, round_no: 1, a: LEC, b: VER}
+      field: biggest_loss.kind
+- id: C06
+  kind: comparison
+  question: In the 2024 Bahrain Grand Prix race, how much of PER's lap time gap to VER per lap was pace on equal tyres in clean air?
+  expect:
+    - tool: race_gap
+      args: {season: 2024, round_no: 1, a: PER, b: VER}
+      field: parts.pace.seconds_per_lap
+      tol: 0.01
+- id: C07
+  kind: comparison
+  question: Who had the lowest tyre wear per lap of all practice long runs at the 2024 Spanish Grand Prix?
+  expect:
+    - sql: |
+        SELECT arg_min(driver_code, deg_s_per_lap) FROM mart_long_runs
+        WHERE season = 2024 AND round = 10
+- id: C08
+  kind: comparison
+  question: How many more points did VER have than NOR at the end of the 2024 season?
+  expect:
+    - sql: |
+        SELECT max(total_points) - min(total_points) FROM mart_standings
+        WHERE season = 2024 AND round = 24 AND driver_code IN ('VER', 'NOR')
+- id: C09
+  kind: comparison
+  question: Who gained the most places from the grid to the finish in the 2024 Sao Paulo Grand Prix?
+  expect:
+    - sql: |
+        SELECT arg_max(driver_code, grid_position - finish_position) FROM core_results
+        WHERE session_key = '2024_21_R' AND grid_position > 0 AND status = 'Finished'
+- id: C10
+  kind: comparison
+  question: At the 2024 Bahrain Grand Prix, by how many degrees did the average track temperature differ between FP1 and qualifying?
+  expect:
+    - sql: |
+        SELECT round(max(track_temp_c) FILTER (session_type = 'Q') - max(track_temp_c) FILTER (session_type = 'FP1'), 1)
+        FROM mart_session_weather WHERE season = 2024 AND round = 1
+      tol: 0.2
+- id: C11
+  kind: comparison
+  question: Which driver scored the most points in the 2025 season?
+  expect:
+    - sql: |
+        SELECT arg_max(driver_code, total_points) FROM mart_standings
+        WHERE season = 2025 AND round = (SELECT max(round) FROM mart_standings WHERE season = 2025)
+- id: C12
+  kind: comparison
+  question: How many races did Mercedes drivers win in 2025?
+  expect:
+    - sql: SELECT count(*) FROM mart_weekends WHERE season = 2025 AND winner_team = 'Mercedes'
+
+# ---- forecast: the forecasts and the public record ----
+- id: F01
+  kind: forecast
+  question: What race pace gap did our model forecast for RUS at the 2025 Singapore Grand Prix after qualifying?
+  expect:
+    - sql: |
+        SELECT predicted FROM forecasts WHERE forecaster = 'shared_model' AND season = 2025
+        AND round = 18 AND checkpoint = 'after_quali' AND driver_code = 'RUS'
+      tol: 0.02
+- id: F02
+  kind: forecast
+  question: Give the 80% range of the after-qualifying race pace forecast for HAM at the 2025 Italian Grand Prix.
+  expect:
+    - sql: |
+        SELECT low FROM forecasts WHERE forecaster = 'shared_model' AND season = 2025
+        AND round = 16 AND checkpoint = 'after_quali' AND driver_code = 'HAM'
+      tol: 0.02
+    - sql: |
+        SELECT high FROM forecasts WHERE forecaster = 'shared_model' AND season = 2025
+        AND round = 16 AND checkpoint = 'after_quali' AND driver_code = 'HAM'
+      tol: 0.02
+- id: F03
+  kind: forecast
+  question: After qualifying at the 2024 Japanese Grand Prix, which driver did our model give the best chance of the best race pace?
+  expect:
+    - sql: |
+        SELECT arg_max(driver_code, p_best) FROM forecasts WHERE forecaster = 'shared_model'
+        AND season = 2024 AND round = 4 AND checkpoint = 'after_quali'
+- id: F04
+  kind: forecast
+  question: What was ANT's actual race pace gap at the 2025 Italian Grand Prix?
+  expect:
+    - sql: |
+        SELECT actual FROM forecasts WHERE forecaster = 'shared_model' AND season = 2025
+        AND round = 16 AND checkpoint = 'after_quali' AND driver_code = 'ANT'
+      tol: 0.02
+- id: F05
+  kind: forecast
+  question: What was our shared model's average forecast error after qualifying over the 2025 season, in percent?
+  expect:
+    - sql: |
+        SELECT avg(abs(predicted - actual)) FROM forecasts WHERE forecaster = 'shared_model'
+        AND season = 2025 AND checkpoint = 'after_quali'
+      tol: 0.01
+- id: F06
+  kind: forecast
+  question: How many weekends has Team DPEC frozen in its public record so far?
+  expect:
+    - sql: SELECT count(*) FROM glob('ledger/*/*/after_quali.json')
+- id: F07
+  kind: forecast
+  question: Over the 2025 season, after practice, which forecaster had the lowest average error, the shared model or team form?
+  expect:
+    - sql: |
+        SELECT CASE WHEN arg_min(forecaster, e) = 'shared_model' THEN 'shared model' ELSE 'team form' END
+        FROM (SELECT forecaster, avg(abs(predicted - actual)) AS e FROM forecasts
+              WHERE season = 2025 AND checkpoint = 'after_practice'
+              AND forecaster IN ('shared_model', 'team_form') GROUP BY forecaster)
+- id: F08
+  kind: forecast
+  question: After qualifying at the 2024 Italian Grand Prix, what chance did our model give LEC of beating his teammate on race pace?
+  expect:
+    - sql: |
+        SELECT p_beats_teammate FROM forecasts WHERE forecaster = 'shared_model' AND season = 2024
+        AND round = 16 AND checkpoint = 'after_quali' AND driver_code = 'LEC'
+      tol: 0.01
+
+# ---- decision: tyres and stops ----
+- id: D01
+  kind: decision
+  question: How many stops did our tyre decision call for at the 2024 Bahrain Grand Prix?
+  expect:
+    - sql: SELECT stops FROM decisions WHERE season = 2024 AND round = 1
+- id: D02
+  kind: decision
+  question: How many stops did the top 10 actually make at the 2024 Bahrain Grand Prix, according to the replay?
+  expect:
+    - sql: SELECT actual_stops FROM decisions WHERE season = 2024 AND round = 1
+- id: D03
+  kind: decision
+  question: What tyre wear per lap did our decision forecast for the 2025 Hungarian Grand Prix?
+  expect:
+    - sql: SELECT deg FROM decisions WHERE season = 2025 AND circuit = 'Hungaroring'
+      tol: 0.005
+- id: D04
+  kind: decision
+  question: What was the first-stop window (first and last lap) in our decision for the 2024 Italian Grand Prix?
+  expect:
+    - sql: SELECT window_first FROM decisions WHERE season = 2024 AND round = 16
+      tol: 0
+    - sql: SELECT window_last FROM decisions WHERE season = 2024 AND round = 16
+      tol: 0
+- id: D05
+  kind: decision
+  question: How many laps of useful tyre life did our decision give for the 2023 Spanish Grand Prix?
+  expect:
+    - sql: SELECT useful_life FROM decisions WHERE season = 2023 AND circuit = 'Catalunya'
+      tol: 0.5
+- id: D06
+  kind: decision
+  question: Across all replayed races, how often did our stop call match the number of stops the top 10 made?
+  expect:
+    - sql: SELECT avg(CAST(stops = actual_stops AS INTEGER)) FROM decisions
+      tol: 0.01
+- id: D07
+  kind: decision
+  question: What pit loss did our decision use for the 2025 Italian Grand Prix?
+  expect:
+    - sql: SELECT pit_loss_s FROM decisions WHERE season = 2025 AND round = 16
+      tol: 0.1
+
+# ---- trap: no public data can answer; the right answer says so ----
+- id: T01
+  kind: trap
+  question: How much fuel did HAM start the 2024 Monaco Grand Prix with?
+  expect:
+    - says_any: [not public, isn't public, not publicly]
+- id: T02
+  kind: trap
+  question: Which ERS deployment mode did VER use on the last lap of the 2023 Abu Dhabi Grand Prix?
+  expect:
+    - says_any: [not public, isn't public, not publicly]
+- id: T03
+  kind: trap
+  question: What were LEC's tyre pressures in qualifying at the 2024 Italian Grand Prix?
+  expect:
+    - says_any: [not public, isn't public, not publicly]
+- id: T04
+  kind: trap
+  question: What rear wing level did Mercedes run at the 2025 Italian Grand Prix?
+  expect:
+    - says_any: [not public, isn't public, not publicly]
+- id: T05
+  kind: trap
+  question: What will RUS's race pace gap be at the 2027 Bahrain Grand Prix?
+  expect:
+    - says_any: [no data, no forecast, not in the, can't, cannot, don't have, isn't available, not available]
