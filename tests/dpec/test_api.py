@@ -180,3 +180,33 @@ def test_debrief_splits_the_lap_and_says_why_the_race_part_is_missing(client):
     assert d["lap"]["gap_s"] == pytest.approx(0.5)  # HAM's laps are 0.5 s slower
     assert [p["kind"] for p in d["lap"]["parts"]][:2] == ["straight", "braking"]
     assert d["race"] is None and "laps where both drivers were clean" in d["race_note"]
+
+
+def test_chat_answers_with_the_tools_it_used(client, monkeypatch):
+    from dpec.assistant import engineer
+    from dpec.assistant.chat import Call, ScriptedChat, Turn
+
+    turns = [
+        Turn("", [Call("t1", "sql", {"query": "SELECT winner FROM mart_weekends"})], stop="tool"),
+        Turn("VER won [sql]."),
+    ]
+    monkeypatch.setattr(engineer, "open_chat", lambda *args: ScriptedChat(turns))
+    r = client.post("/api/chat", json={"question": "Who won?"})
+    assert r.status_code == 200, r.text
+    assert r.json()["answer"] == "VER won [sql]."
+    assert r.json()["calls"][0]["ok"]
+
+
+def test_chat_is_off_on_the_public_copy(client):
+    client.app.state.settings = client.app.state.settings.model_copy(update={"mode": "public"})
+    assert client.post("/api/chat", json={"question": "Who won?"}).status_code == 403
+
+
+def test_public_copy_has_no_telemetry_but_keeps_the_rest(client):
+    client.app.state.settings = client.app.state.settings.model_copy(update={"mode": "public"})
+    r = client.get("/api/weekends/2024/1/compare", params={"session": "R", "a": "VER", "b": "HAM"})
+    assert r.status_code == 404
+    assert "local app" in r.json()["detail"]
+    d = client.get("/api/weekends/2024/1/debrief", params={"session": "R", "a": "HAM", "b": "VER"})
+    assert "local app" in d.json()["lap_note"]
+    assert client.get("/api/health").json()["latest_event"] == "Test Grand Prix"
