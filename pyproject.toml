@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=2.3.0",
     "duckdb>=1.5.6",
     "fastapi>=0.162.0",
     "fastf1>=3.8.3",
