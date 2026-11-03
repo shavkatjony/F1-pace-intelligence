@@ -1,4 +1,4 @@
-.PHONY: setup test lint format data build check run freeze score
+.PHONY: setup test lint format data build check run freeze score snapshot public image image-run
 
 setup:
 	uv sync
@@ -40,3 +40,18 @@ score:
 	uv run dpec build
 	uv run dpec check
 	uv run dpec score --season $(SEASON) --round $(ROUND)
+
+# The public copy (Lesson 20)
+snapshot:
+	uv run dpec snapshot
+
+public:
+	uv run dpec serve --config config/public.yaml
+
+image: snapshot
+	rm -rf snapshot && mkdir snapshot
+	tar -xzf $$(ls -t dist/dpec-data-*.tar.gz | head -1) -C snapshot
+	docker build -t dpec-public .
+
+image-run:
+	docker run --rm -p 7860:7860 dpec-public
