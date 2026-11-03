@@ -1,0 +1,54 @@
+name: release
+
+# The public copy (step E1, decision 0018). When a release is published on GitHub with a data
+# snapshot attached (dpec-data-<date>.tar.gz from `make snapshot`), this job builds the Docker
+# image, starts it and checks it answers like the public copy should, then pushes it to
+# GitHub's container registry as ghcr.io/<owner>/<repo>:<tag> and :latest.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and unpack the data snapshot attached to this release
+        run: |
+          gh release download "$TAG" --pattern 'dpec-data-*.tar.gz' --dir dist
+          mkdir snapshot
+          tar -xzf dist/dpec-data-*.tar.gz -C snapshot
+          cat snapshot/manifest.json
+
+      - name: Build the image (it checks the snapshot's checksums)
+        run: docker build -t dpec-public .
+
+      - name: "Smoke test: it starts, it's the public copy, chat is off"
+        run: |
+          docker run -d -p 7860:7860 --name app dpec-public
+          for i in $(seq 1 30); do curl -sf localhost:7860/api/health && break; sleep 2; done
+          curl -sf localhost:7860/api/health | grep -q '"mode":"public"'
+          curl -sf localhost:7860/ | grep -q '<title>'
+          curl -sf localhost:7860/api/weekends | grep -q '"winner"'
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:7860/api/chat \
+            -H 'Content-Type: application/json' -d '{"question": "Who won?"}')
+          test "$code" = 403
+          docker logs app
+
+      - name: Push to GitHub's container registry
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker tag dpec-public "$image:$TAG"
+          docker tag dpec-public "$image:latest"
+          docker push "$image:$TAG"
+          docker push "$image:latest"

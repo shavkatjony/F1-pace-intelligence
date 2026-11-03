@@ -1,0 +1,10 @@
+# Only what the image needs (Dockerfile). Everything else stays out, above all data/ (40 GB).
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!src/
+!config/
+!web/app/
+!snapshot/
+**/__pycache__
