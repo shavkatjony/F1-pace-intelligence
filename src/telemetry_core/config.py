@@ -18,6 +18,19 @@ class Paths(BaseModel):
     dictionary: Path
 
 
+class Assistant(BaseModel):
+    """The race engineer (step D2). Defaults work without this section in the YAML file."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    provider: Literal["claude", "ollama"] = "claude"
+    claude_model: str = "claude-opus-5-5"
+    effort: Literal["low", "medium", "high"] = "medium"  # how hard Claude thinks first
+    ollama_model: str = "qwen3:8b"
+    ollama_url: str = "http://localhost:11434"
+    max_tool_calls: int = Field(default=8, ge=1, le=20)  # then it must answer
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")  # unknown keys (typos) are errors
 
@@ -34,6 +47,7 @@ class Settings(BaseModel):
     push_lap_band_pct: float = Field(gt=0, le=5)  # push laps are this close to the best lap
     mode: Literal["local", "public"]
     paths: Paths
+    assistant: Assistant = Assistant()
 
     @field_validator("seasons")
     @classmethod
