@@ -2,7 +2,7 @@
 // Same look and window system as web/prototype/, but every number comes from the warehouse.
 // Each window type below has: key(c) = which data it needs for context c, load(c) = fetch it,
 // render(i, data, c) = draw it. The shared context c is the weekend, session and two drivers.
-import { get, weekendPath as wk } from "./api.js";
+import { get, post, weekendPath as wk } from "./api.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -39,8 +39,8 @@ function presets() { uid = 1; return {
     [W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2)],
     [W("forecast", 12, 4), W("strategy", 6, 5), W("laps", 6, 3), W("standings", 6, 2)]] },
   performance: { name: "Performance", hint: "1 large monitor · driver vs driver", monitors: [[W("telemetry", 8, 3), W("trackmap", 4, 3), W("delta", 7, 2), W("corners", 5, 2), W("debrief", 12, 3)]] },
-  strategy: { name: "Strategy", hint: "forecast, record, long runs, stints and weather", monitors: [[W("forecast", 7, 4), W("strategy", 5, 6), W("record", 7, 3), W("laps", 7, 3), W("weather", 5, 2)]] },
-  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("forecast", 12, 5), W("record", 12, 5), W("debrief", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
+  strategy: { name: "Strategy", hint: "forecast, record, long runs, stints and weather", monitors: [[W("forecast", 7, 4), W("strategy", 5, 6), W("record", 7, 3), W("laps", 7, 3), W("weather", 5, 2), W("engineer", 12, 4)]] },
+  laptop: { name: "Laptop", hint: "one window at a time, as tabs", tabs: true, monitors: [[W("session", 12, 5), W("forecast", 12, 5), W("record", 12, 5), W("debrief", 12, 5), W("engineer", 12, 5), W("telemetry", 12, 5), W("trackmap", 12, 5), W("laps", 12, 5), W("strategy", 12, 5), W("results", 12, 5), W("standings", 12, 5)]] } } }
 let st = { ctx: { ...DEF_CTX }, set: { ...DEF_SET }, preset: "pitwall", mon: 0, tab: 0, layouts: presets() };
 const KEY = "dpec-pitwall-app-v1";
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.layouts) { st = { ...st, ...s, ctx: { ...DEF_CTX, ...s.ctx }, set: { ...DEF_SET, ...s.set } }; uid = 1 + Math.max(0, ...Object.values(st.layouts).flatMap(p => p.monitors.flat()).map(w => +w.id.slice(1) || 0)) } } catch (e) { }
@@ -374,6 +374,26 @@ def("debrief", { title: "Debrief", mart: "distance grid · core_laps", color: "v
       : `<h4>Race</h4><p class="note">${esc(D.race_note)}</p>`;
     i.body.innerHTML = `<div class="pad" style="display:grid;grid-template-columns:${two ? "1fr 1fr" : "1fr"};gap:16px">${`<div>${lap}</div><div>${race}</div>`}</div>` } });
 
+const md = t => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>"); // bold and new lines only
+def("engineer", { title: "Race engineer", mart: "Claude or Ollama · read-only tools", color: "var(--plum)", deps: ["primary", "compare"],
+  hint: "The race engineer is built in Lesson 19.",
+  key: () => "/settings", load: () => get("/settings"),
+  render(i, S, c) { const log = i.state.log || (i.state.log = []), busy = log.length && !log[log.length - 1].answer && !log[log.length - 1].error;
+    const where = `${c.season} round ${c.round}`;
+    i.tb.innerHTML = `<span>Answers only from the warehouse. Each number names the tool it came from.</span>${S.mode === "public" ? "<b>Local app only</b>" : ""}`;
+    const sugg = [`Who won ${where}?`, `Where did ${c.primary} lose time to ${c.compare} in ${SESSION_NAMES[c.session] || c.session}?`, `What did our forecast say for ${where} after qualifying?`, `How many stops did our tyre decision call for ${where}?`, "How much fuel did HAM start with?"];
+    const msg = m => `<div class="msg me"><div class="who">You</div><div class="bubble">${esc(m.q)}</div></div>` + (m.answer || m.error || busy ? `<div class="msg ai"><div class="who">Engineer ${m.provider ? `<span class="route">${esc(m.provider)}</span>` : ""}${m.error ? '<span class="route np">no answer</span>' : ""}</div><div class="bubble">${
+      m.answer ? md(m.answer) + `<div class="note" style="margin-top:6px">${m.calls.length ? "looked up: " + m.calls.map(t => esc(t.name) + (t.ok ? "" : " (failed)")).join(", ") : "no tools used"} · ${m.seconds} s · ${m.tokens.toLocaleString()} tokens</div>` : m.error ? esc(m.error) : "looking it up…"}</div></div>` : "");
+    i.body.innerHTML = `<div class="radio"><div class="log">${log.length ? log.map(msg).join("") : `<p class="note">Ask about any session from 2022 on: results, laps, tyres, weather, forecasts, the tyre decision or the public record. Fuel, ERS, setups and tyre pressures aren't public, and it will say so.</p>`}</div>
+      <div class="sugg">${sugg.map(q => `<button data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+      <form class="ask"><input name="q" placeholder="Ask the race engineer…" maxlength="500" autocomplete="off" value="${esc(i.state.draft || "")}" ${busy ? "disabled" : ""}><button class="btn" ${busy ? "disabled" : ""}>Ask</button></form></div>`;
+    const L = $(".log", i.body); L.scrollTop = L.scrollHeight;
+    const ask = q => { if (!q.trim() || busy) return; log.push({ q: q.trim() }); i.state.draft = ""; schedule(i);
+      post("/chat", { question: q.trim() }).then(a => Object.assign(log[log.length - 1], a)).catch(e => log[log.length - 1].error = e.message).finally(() => schedule(i)) };
+    $("form", i.body).onsubmit = e => { e.preventDefault(); ask(e.target.q.value) };
+    $("input", i.body).oninput = e => i.state.draft = e.target.value;
+    $(".sugg", i.body).onclick = e => { const b = e.target.closest("[data-q]"); if (b) ask(b.dataset.q) } } });
+
 /* ================= window chrome ================= */
 const ICONS = {
   link: '<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
@@ -507,7 +527,9 @@ async function start() {
   catch (e) { $("#ws").innerHTML = `<div class="err" style="grid-column:1/-1">Can't reach the API: ${esc(e.message)}<small>Start it with "make run" in the project folder, then open http://127.0.0.1:8000</small></div>`; return }
   if (!WEEKENDS.length) { $("#ws").innerHTML = `<div class="err" style="grid-column:1/-1">The warehouse has no weekends yet.<small>Run "make data" first.</small></div>`; return }
   $("#oursNote").textContent = `${SETTINGS.adopted_team} (adopted_team in config/dpec.yaml). Their cars carry ★ OURS.`;
-  get("/health").then(hl => { $("#modeNote").textContent = `${hl.mode} · ${hl.sessions} sessions in the warehouse` }).catch(() => { });
+  get("/health").then(hl => { const pub = hl.mode === "public";
+    $("#modeNote").textContent = `${pub ? "public copy" : "local"} · ${hl.sessions} sessions · data up to ${hl.latest_event} ${hl.latest}`;
+    if (pub) $("#footNote").textContent = "Public read-only copy. Telemetry traces and the race engineer run only on the local app." }).catch(() => { });
   const first = WEEKENDS.find(w => w.season === wish.season && w.round === wish.round) || WEEKENDS[0];
   try { Object.assign(st.ctx, await resolve(first.season, first.round, wish)) } catch (e) { toast(e.message) }
   syncHeader(); buildWS() }
