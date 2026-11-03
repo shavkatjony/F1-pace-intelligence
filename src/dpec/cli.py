@@ -574,3 +574,94 @@ def debrief(
     out.write_text(page, encoding="utf-8")
     typer.echo(page)
     typer.echo(f"Saved: {out}")
+
+
+@app.command()
+def ask(
+    question: str,
+    provider: str = typer.Option(None, help="claude or ollama (default: the one in config)"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """Ask the race engineer one question. It looks the answer up with read-only tools."""
+    from dpec.assistant.chat import ProviderError
+    from dpec.assistant.engineer import ask as ask_engineer
+
+    s = load_settings(config)
+    try:
+        a = ask_engineer(question, s, provider)
+    except ProviderError as problem:
+        typer.echo(str(problem), err=True)
+        raise typer.Exit(1) from None
+    typer.echo(a.text)
+    typer.echo("")
+    for c in a.calls:
+        typer.echo(f"  looked up: {c['name']} {c['args']}{'' if c['ok'] else '  (failed)'}")
+    typer.echo(
+        f"  {a.provider} {a.model}: {a.seconds} s, {a.tokens_in:,} tokens in "
+        f"({a.cached_in:,} cached), {a.tokens_out:,} out"
+    )
+
+
+@app.command("eval-ai")
+def eval_ai(
+    provider: str = typer.Option(None, help="claude or ollama (default: the one in config)"),
+    only: str = typer.Option(None, help="question ids to run, e.g. L01,C05 (default: all 50)"),
+    dry_run: bool = typer.Option(False, help="print the right answers only; no model is asked"),
+    config: str = "config/dpec.yaml",
+) -> None:
+    """The race engineer's exam: 50 questions with answers the warehouse knows. Saves every
+    answer to reports/ai/ and prints the pass rate per kind of question."""
+    from dpec.assistant.chat import ProviderError
+    from dpec.assistant.evals import answer_key, cost_usd, load_questions, run_eval, save, summary
+
+    s = load_settings(config)
+    ids = only.split(",") if only else None
+    if dry_run:
+        questions = [q for q in load_questions() if not ids or q["id"] in ids]
+        for qid, values in answer_key(s, questions).items():
+            shown = [round(v, 3) if isinstance(v, float) else v for v in values]
+            typer.echo(f"{qid}: {shown}")
+        return
+    try:
+        results = run_eval(s, provider, ids)
+    except ProviderError as problem:
+        typer.echo(str(problem), err=True)
+        raise typer.Exit(1) from None
+    typer.echo(summary(results).to_string(float_format=lambda v: f"{v:.2f}"))
+    cost = cost_usd(results)
+    typer.echo(f"Cost at list prices: {'free (local)' if cost is None else f'${cost:.2f}'}")
+    typer.echo(f"Saved: {save(results)}")
+
+
+@app.command("eval-report")
+def eval_report() -> None:
+    """Every saved exam run side by side, written to reports/ai/README.md."""
+    from dpec.assistant.evals import REPORTS, compare_runs
+
+    table = compare_runs()
+    page = (
+        "# The race engineer's exam\n\n"
+        "50 questions with answers the warehouse knows (evals/questions.yaml). `looked it up` "
+        "= share of non-trap answers that called at least one tool. Cost: list prices.\n\n"
+        f"{table}\n"
+    )
+    out = REPORTS / "README.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8")
+    typer.echo(page)
+    typer.echo(f"Saved: {out}")
+
+
+@app.command()
+def snapshot(config: str = "config/dpec.yaml") -> None:
+    """Pack the data the public copy needs (warehouse, forecasts, public record) into
+    dist/dpec-data-<date>.tar.gz, with checksums. Attach it to a GitHub Release (Lesson 20)."""
+    from dpec.publish.snapshot import make_snapshot
+
+    s = load_settings(config)
+    try:
+        out = make_snapshot(s)
+    except FileNotFoundError as problem:
+        typer.echo(str(problem), err=True)
+        raise typer.Exit(1) from None
+    typer.echo(f"Saved: {out} ({out.stat().st_size / 1e6:.1f} MB)")
