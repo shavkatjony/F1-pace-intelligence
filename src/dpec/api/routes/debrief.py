@@ -7,7 +7,7 @@ import json
 import duckdb
 from fastapi import APIRouter, HTTPException, Request
 
-from dpec.api.routes.analytics import Session, fastest_clean_lap, session_key
+from dpec.api.routes.analytics import LOCAL_ONLY, Session, fastest_clean_lap, session_key
 from dpec.debrief.attribution import attribute, paired_laps
 from dpec.debrief.segments import lap_gap
 
@@ -26,6 +26,8 @@ def debrief(
     out: dict = {"a": a, "b": b, "session": session, "lap": None, "race": None}
     key = session_key(season, round_no, session)
     try:
+        if s.mode == "public":
+            raise HTTPException(404, LOCAL_ONLY)
         lap_a, lap_b = fastest_clean_lap(request, key, a), fastest_clean_lap(request, key, b)
         split, official, _ = lap_gap(s.paths.warehouse, s.paths.raw, key, (b, lap_b), (a, lap_a))
         out["lap"] = {

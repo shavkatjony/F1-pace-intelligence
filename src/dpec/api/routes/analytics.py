@@ -15,6 +15,7 @@ from telemetry_core.alignment.compare import compare_laps, corner_table
 from telemetry_core.warehouse import query
 
 router = APIRouter()
+LOCAL_ONLY = "telemetry traces are only on the local app (the raw files are 4 GB)"
 Session = Literal["FP1", "FP2", "FP3", "SQ", "S", "Q", "R"]
 
 
@@ -32,7 +33,14 @@ def session_key(season: int, round_no: int, session: str) -> str:
 def health(request: Request) -> dict:
     """Is the warehouse there, and how much is in it?"""
     s = request.app.state.settings
-    found = rows(request, "SELECT count(*) AS sessions, max(season) AS latest FROM core_sessions")
+    found = rows(
+        request,
+        """
+        SELECT count(*) AS sessions, max(season) AS latest,
+            arg_max(event_name, session_date_utc) AS latest_event
+        FROM core_sessions
+        """,
+    )
     return {"status": "ok", "team": s.team_name, "mode": s.mode, **found[0]}
 
 
@@ -289,6 +297,8 @@ def compare(
     """Driver A's lap against driver B's on one distance grid. Default: each one's fastest
     clean lap of the session. a_behind_s > 0 = A is behind B at that point of the lap."""
     s = request.app.state.settings
+    if s.mode == "public":
+        raise HTTPException(404, LOCAL_ONLY)
     key = session_key(season, round_no, session)
     lap_a = lap_a or fastest_clean_lap(request, key, a)
     lap_b = lap_b or fastest_clean_lap(request, key, b)
