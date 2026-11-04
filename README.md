@@ -1,63 +1,76 @@
 # F1 Pace Intelligence · Team DPEC Weekend Forecaster
 
-> After each practice session, how fast will each car really be on Sunday, how sure are we, and what should the team do about its tyres and pit stops?
+> Before each Formula 1 race, how fast will each car really be, how sure are we, and what should the team do about tyres and pit stops? Then, after the race: were we right, and where did the time go?
 
-DPEC is a solo end-to-end project in data engineering, analytics, machine learning and AI, built on public Formula 1 timing data (2022–2026). It treats the project like a small race-team engineering office: one data foundation, clear rules for what counts as "real pace", forecasts saved **before** each session, and an honest score **after** the race.
+**Live, read-only:** https://<my-hf-name soon >-dpec-pit-wall.hf.space · **3-minute video:** <my video link> · **한국어 요약:** [mydocs/summary-ko.md](docs/summary-ko.md) · **The method, in full:** [docs/methods.md](docs/methods.md)
 
-**Status:** Phases A (data foundation) and B (history and analytics) are done. Every past weekend can be explored in a pit-wall app on the real data, and a tested answer to *which signals predict Sunday* is in. The forecaster (Phase C) is next. Everything below marked ✅ runs today.
+DPEC is a solo end-to-end project in data engineering, analytics, machine learning and AI, built on public Formula 1 timing data (2022–2026). It works like a small race-team engineering office for one adopted team (Mercedes's two cars): one trusted data foundation, forecasts made only with what was known at the time, **forecasts frozen in public before each race and scored after it**, a debrief of where the time went, and an AI race engineer that answers from the data or says "not public".
 
-![The DPEC pit wall app on Bahrain 2024 qualifying: session board, results, weather and data quality](docs/images/pit-wall-app.png)
+![The forecast window: race pace forecast for Bahrain 2024 after qualifying, with 80% ranges and what happened](docs/images/race-pace-forecast.png)
 
-*The pit wall app on real data, Bahrain 2024 qualifying. Every window reads the same weekend, session and drivers, so changing one changes all of them. The session board ranks each driver's best clean lap of the whole session (Leclerc's 1:29.165 came in Q2); the results window shows the official order, with Verstappen on pole at 1:29.179.*
-
----
-
-## What works today
-
-| | Command | What it does |
-|---|---|---|
-| ✅ | `dpec ingest` | Downloads every session of every season in the config from FastF1, once, into immutable Parquet files with a manifest (row counts + SHA-256). Re-runs only fetch new sessions; rate limits stop cleanly and resume |
-| ✅ | `dpec build` | Rebuilds the DuckDB warehouse from plain SQL files: clean core tables (sessions, laps with quality flags, official results, file inventory, ID maps), then answer tables (weekends, weather, standings, pace, tyre stints, long runs, track evolution, forecast signals) |
-| ✅ | `dpec check` | Runs every data check on the real warehouse and fails if any rule is broken or a column is missing from the [data dictionary](docs/data-dictionary.md) |
-| ✅ | `dpec sql "…"` | Runs any read-only SQL query on the warehouse |
-| ✅ | `dpec compare` | Puts two laps on a 5 m distance grid and shows where one gains or loses time, corner by corner |
-| ✅ | `make run` | Starts the pit wall app: a read-only API (FastAPI, 13 addresses) and 11 linked windows in the browser |
-
-### The data, in numbers
-
-| | |
-|---|---|
-| Seasons | 2022–2026 (ground-effect era, plus the 2026 rules) |
-| Sessions saved | 545 (practice, qualifying, sprint, race) |
-| Laps | 297,724, of which 163,599 (55%) are clean race pace |
-| Raw Parquet on disk | 4.1 GB |
-| Teams | 11, under 15 names (AlphaTauri → RB → Racing Bulls, Alfa Romeo → Kick Sauber → Audi) |
-| Data checks | 19, all passing on every rebuild |
-| Unit tests | 58, run in CI on every push, no internet needed |
+*Bahrain 2024 as the model saw it after qualifying, before the race. For each car: the race pace forecast (○, % behind the fastest car), its 80% range (bar) and what happened (◆). Hamilton: forecast +0.69%, range +0.01% to +1.37%, real +1.21%. Made by the same walk-forward test as every number below: only races before this one.*
 
 ---
 
-## The pit wall app
+## Results
 
-`make run`, then open http://127.0.0.1:8000. Built for a real pit wall: several monitors, layouts you can rearrange and save, Day and Night themes, km/h or mph, and colour-blind safe driver colours.
+### 1. Race pace forecasts beat every simple guess, on years never used to build them
 
-| Window | What it shows | From |
+Walk-forward backtest: before each race weekend from 2023 on, the model is refitted on earlier races only, then forecasts that weekend after practice and after qualifying. Settings were chosen on 2023–24; results are reported on **2025–26** (37 weekends, 726 driver-races), never used to choose anything. Race pace = a driver's median clean race lap, as % behind the fastest car that day.
+
+| Forecaster | After practice | After qualifying |
 |---|---|---|
-| Session board | Best clean lap per driver, gap, tyre, clean laps | `mart_driver_session_pace` |
-| Telemetry, track map, lap delta, corners | Two laps on one 5 m distance grid: speed, throttle, brake, gear, and where the time goes | `dpec compare` |
-| Laps and long runs | Every clean lap, practice long runs with fuel correction | `core_laps`, `mart_long_runs` |
-| Tyre strategy | Every stint of the race, in finishing order | `mart_stints` |
-| Weather and track | Track and air temperature, rain, track evolution | `mart_session_weather`, `mart_track_evolution` |
-| Data quality | Why laps aren't clean, per session | `core_laps`, `core_files` |
-| Standings, results | Championship after each round; official classification | `mart_standings`, `core_results` |
+| **Shared model** (one regression for every track and year) | **0.648%** (0.58 s a lap) | **0.548%** (0.49 s a lap) |
+| Team form (the team's recent races) | 0.674% | 0.674% |
+| Per-year model | 0.883% | 0.589% |
+| The signal as is (long runs / qualifying gap) | 1.071% | 0.594% |
+| No signal (everyone equal) | 1.047% | 1.047% |
 
-- **Read-only by design.** Every request opens its own read-only connection, every value goes in as a SQL parameter, and wrong inputs get a clear 422 or 404. The app can't change the data, and the warehouse can be rebuilt while it runs.
-- **Linked windows.** One shared context (weekend, session, two drivers, the cursor on the lap) syncs across windows and across browser windows on other monitors.
-- **Tested.** API tests run on a small fake warehouse, and window numbers were checked against direct SQL queries.
+- **Honest ranges:** 78.5% (after practice) and 79.9% (after qualifying) of real race paces landed inside the 80% ranges.
+- **Honest chances:** chances of a top-3 race pace score 0.077 on the Brier score after qualifying, against 0.132 with no information.
+- **Where it doesn't win:** the per-year model orders drivers slightly better after qualifying (Spearman 0.843 vs 0.821), and after the 2026 rules change simple guesses did as well for the first ~5 races.
 
-### A bug only a chart could show
+### 2. From forecast to a decision you can check
 
-The weather window drew Singapore 2026 with a track temperature of **0 °C**. The data had 47 readings of exactly 0 °C (of 54,295) in 14 sessions, from Mexico City 2022 to Singapore 2026: a sensor dropping out, not a cold track. A new data check now fails on any session whose track temperature falls outside 5–70 °C, and zero readings are treated as missing. Singapore's minimum track temperature is now 38–47 °C.
+For each dry race: tyre wear from practice, the pit-stop cost at this circuit, and 1, 2 and 3 stops costed over 4,000 replays. If no plan wins at least 65% of the replays, the packet says **"no clear decision"**. Replayed on all 78 dry races since 2023: the stop call matched the top 10 in **58%** of races, against 46% for "always one stop" (67% vs 57% when the call was clear). Scored on what can be checked (wear, stops, real first stops inside the window), never on "did the plan win".
+
+### 3. In public: frozen before the race, scored after
+
+After qualifying, `dpec freeze` writes every car's forecast, range, chances and the tyre decision into [`ledger/`](ledger/), with the SHA-256 of its own content, and I push it before the deadline (30 minutes before the race). A CI job fails if a forecast reached GitHub late, or if any frozen file is ever changed. After the race, `dpec score` adds a separate score file.
+
+- **Dress rehearsal:** the live code, run on 2026 rounds 1–17 as dry runs: error 0.573%, exactly the backtest's 0.573% (so the live path is the tested path), 81% inside the 80% ranges, better than team form on 14 of 16 weekends.
+- **Live weekends:** <number> weekends frozen before the race so far; log in [docs/live-weekends.md](docs/live-weekends.md).
+
+### 4. Where the time went
+
+![The debrief window: lap gap by kind of track part, and the race gap split into pace, tyres and traffic](docs/images/debrief.png)
+
+Qualifying: our drivers' best laps against the fastest, on a 5 m grid, every metre's gap assigned to a kind of track part (braking, straight, traction, slow, medium or fast corner); the parts add up to the lap gap exactly. Race: the gap split by a regression on paired laps into pace, tyre age, compound and traffic, with bootstrap ranges. Singapore 2026: Russell was 1.49 s a lap off the leader's pace, about 0.9 s of it pace and about 0.5 s traffic (he started 19th and spent 76% of his clean laps in traffic).
+
+### 5. An AI race engineer with an exam
+
+An LLM agent with eight **read-only tools** (a guarded SQL tool, the lap and race splits, the forecasts, the tyre decision, the public record) answers questions about any session since 2022. Every number names the tool it came from; fuel, setups or ERS get "not public". A 50-question exam, whose right answers are computed from the warehouse each run, grades it automatically: Claude passed **<overall>%** with **<traps> of 5** traps refused, at about $<cost> a run. Results: [`reports/ai/`](reports/ai/README.md).
+
+---
+
+## Try it
+
+**Online:** https://<your-hf-name>-dpec-pit-wall.hf.space (read-only; it may take a minute to wake up). Telemetry traces and the race engineer run only on the local app.
+
+![The public copy of the pit wall](docs/images/public-copy.png)
+
+**On your machine** (needs [uv](https://docs.astral.sh/uv/) and Python 3.12):
+```bash
+git clone https://github.com/shavkatjony/F1-pace-intelligence.git
+cd F1-pace-intelligence
+make setup                 # install everything with uv
+make test                  # 127 tests, no internet needed
+make data                  # download, build, check. First run: hours, about 40 GB of FastF1 cache
+uv run dpec backtest       # forecast and score every past dry race
+uv run dpec replay         # replay every past tyre and stop decision
+make run                   # the pit wall app: http://127.0.0.1:8000
+```
+Settings live in [`config/dpec.yaml`](config/dpec.yaml); nothing is hard-coded.
 
 ---
 
@@ -65,71 +78,50 @@ The weather window drew Singapore 2026 with a track temperature of **0 °C**. Th
 
 ```text
 FastF1 (official F1 timing feed)
-      │  dpec ingest: only file that talks to the internet
+      │  dpec ingest: the only part that talks to the internet
       ▼
-data/raw/fastf1/season=…/event=…/session=…/*.parquet + manifest.json   (never edited)
+data/raw/…/*.parquet + manifest.json                         (never edited, SHA-256 per file)
       │  dpec build: plain SQL run by DuckDB
       ▼
-core_sessions · core_laps · core_results · core_files      (data/warehouse.duckdb)
-dim_drivers · dim_teams      ← ID maps, with seeds/teams.csv
-      │  sql/marts: answer tables
-      ▼
-mart_weekends · mart_session_weather · mart_standings · mart_driver_session_pace
-mart_stints · mart_long_runs · mart_track_evolution · mart_weekend_signals
-      │  dpec check: 19 data checks + the data dictionary
+core tables → answer tables (weekends, weather, pace, stints, long runs, track evolution,
+              weekend signals, race strategy)                (data/warehouse.duckdb)
+      │  dpec check: 21 data checks + the data dictionary
       │
-      ├── distance grid → dpec compare                        ✅
-      ├── read-only API → pit wall app (11 linked windows)     ✅
-      ├── research: what predicts race pace                   ✅ (below)
-      ├── forecaster: one shared model for all tracks and years (Phase C)
-      └── decisions, debrief, AI assistant                       (Phases C–D)
+      ├── forecasting/  baselines → shared model → ranges → chances      dpec backtest
+      ├── decisions/    tyre wear → pit loss → stop plans → packet        dpec replay, dpec packet
+      ├── record/       freeze before the race → score after → ledger/    dpec freeze, dpec score
+      ├── debrief/      lap gap by track part, race gap by cause          dpec debrief
+      ├── assistant/    8 read-only tools → Claude or Ollama → exam       dpec ask, dpec eval-ai
+      ├── api/ + web/   read-only API → pit wall app (linked windows)     make run
+      └── publish/      data snapshot → GitHub release → Docker image → Hugging Face Space
 ```
 
-### When is a lap "real pace"?
+| Command | What it does |
+|---|---|
+| `dpec ingest` · `build` · `check` | Download once, rebuild the warehouse from SQL, run every data check |
+| `dpec backtest` · `replay` · `packet` | Walk-forward forecasts and scores; tyre and stop decisions; one race's decision packet |
+| `dpec freeze` · `score` · `ledger` | The public record: freeze before the race, score after, verify every frozen file |
+| `dpec debrief` | Where our cars' time went, in qualifying and in the race |
+| `dpec ask` · `eval-ai` · `eval-report` | The race engineer, and its exam |
+| `dpec snapshot` · `make public` | Pack the data for the public copy; run the public copy locally |
 
-Every lap gets exactly one reason code: `clean`, or the **first** rule it breaks, in this order:
+### The data, in numbers
 
-`no_time` → `generated` → `in_lap` → `out_lap` → `lap_one` → `red_flag` → `safety_car` → `vsc` → `yellow` → `deleted` → `inaccurate` → `wet_tyre` → `slow`
+| | |
+|---|---|
+| Seasons | 2022–2026 (ground-effect era, plus the 2026 rules) |
+| Sessions | 545 by October 2026, plus each new weekend |
+| Laps | 297,724, of which 55% are clean race pace (78% in races, 27% in qualifying) |
+| Data checks | 21, all passing on every rebuild |
+| Tests | 127, run in CI on every push, no internet and no API key needed |
 
-`slow` means slower than 107% of the session's median clean lap. That limit was picked from the data: in races it flags 395 laps at 107%, but 3,445 at 103%, which would throw away the old-tyre laps the tyre model needs. Every rule is also kept as its own yes/no column, so later models can be stricter or looser.
+### Messy data, found and handled
 
-### Checks that make the data trustworthy
-
-Every rule is a SQL query in [`sql/checks/`](sql/checks/) that returns the rows breaking it; empty means pass. `make data` downloads, builds, then runs them all, and stops if one fails.
-
-- The grain of every table is tested: one row per driver, per lap, per session, with no duplicates.
-- Results add up: every race hands out 101 or 102 points (102 with the fastest-lap point until 2024) and every sprint 36.
-- Penalties decided after the flag are in: for example, Russell's win at Spa 2024 shows as a disqualification.
-- An empty table from FastF1 must be listed in `seeds/known_gaps.csv` (1 of about 3,800 saved tables), or the check fails.
-- Every driver has an ID and every lap a known team. The official feed has gaps here, fixed from the data itself: sprint-qualifying results have no driver IDs (borrowed from the same season), and two 2026 practice sessions have no team names (taken from the same weekend, or for FP1 stand-in drivers, from their car number).
-- Weather readings must be believable: sensor dropouts (0 °C) are caught and treated as missing.
-- Every column in the warehouse is described in the [data dictionary](docs/data-dictionary.md); a missing one fails the build.
-
----
-
-## What predicts Sunday's race pace?
-
-Before building a forecaster, I tested which signals known before the race actually predict it. Race pace = each driver's median clean race lap, as % behind the best; 86 dry weekends, 2022–2026. For each weekend: does the signal put the drivers in the same order as the race (Spearman correlation)?
-
-![Spearman correlation of each signal with race pace, per dry weekend](docs/images/practice-vs-race.png)
-
-| Signal (known before the race) | Median correlation per weekend | Weekends above 0.5 |
-|---|---|---|
-| Qualifying pace | **0.80** | 90% |
-| FP2 long runs | 0.59 | 60% |
-| All practice long runs (FP1–FP3) | 0.39 | 31% |
-
-- The gap between qualifying and long runs is not luck: a bootstrap over weekends puts it at 0.34 to 0.48.
-- Leave-one-weekend-out, the error in predicting race pace is 0.89% of a lap with no signal, 0.60% with qualifying, and 0.59% with qualifying plus long runs: practice adds only about 2%.
-- So the forecaster starts from qualifying, and practice has to earn its place. The main caveat: qualifying also sets the grid, and clean air changes race pace.
-
-Full method, numbers and limits: [`reports/b3-practice-vs-race.md`](reports/b3-practice-vs-race.md).
-
-### Lap by lap, on a distance grid
-
-![VER pole lap vs LEC's best lap, Bahrain 2024 qualifying, on a 5 m distance grid](docs/images/bahrain-pole.png)
-
-*Bahrain 2024 qualifying: Verstappen's pole lap against Leclerc's best Q2 lap, aligned metre by metre. Top: speed. Bottom: the running gap. The grid reproduces the official lap times to the millisecond (89.179 s vs 89.165 s), and every corner lines up within 10 m.*
+- Every lap gets exactly one reason code: `clean`, or the **first** rule it breaks, in a fixed order (`no_time` → `generated` → `in_lap` → `out_lap` → `lap_one` → `red_flag` → `safety_car` → `vsc` → `yellow` → `deleted` → `inaccurate` → `wet_tyre` → `slow`). Wet races are caught automatically (Japan 2022 and São Paulo 2024: no clean laps).
+- Gaps in the official feed, fixed from the data: sprint-qualifying results with no driver IDs, 2026 practice sessions with no team names, teams renamed across years (an ID map).
+- A track temperature sensor dropping out: 47 readings of exactly 0 °C in 14 sessions, now treated as missing.
+- Results add up: 101 or 102 points per race, 36 per sprint, disqualifications after the flag included.
+- A race whose length changed (Montreal 2026: 68 laps, 70 before) and a new circuit (Madrid's Madring, 2026): the live path takes the official length as an input instead of guessing.
 
 ---
 
@@ -143,30 +135,22 @@ Short records of what was decided, why, and what was rejected: [`docs/decisions/
 | 0002 | Parquet files + DuckDB, no database server |
 | 0003 | Clean tables and the ordered lap rules |
 | 0004 | Distance grid: computed on demand, not stored |
-| 0005 | Results come from FastF1 (which already carries the official classification); no second adapter |
+| 0005 | Results come from FastF1; no second adapter |
 | 0006 | Data checks as SQL that return bad rows; driver and team ID maps |
-| 0007 | Answer tables (marts) in plain SQL; pace in % of the session's best; weather dropouts as missing |
+| 0007 | Answer tables in plain SQL; pace in % of the session's best; weather dropouts as missing |
 | 0008 | Tyre stints, practice long runs, and an explicit fuel-burn correction |
-| 0009 | Track evolution measured within each driver (fixed effects); wet sessions flagged, not deleted |
+| 0009 | Track evolution measured within each driver; wet sessions flagged, not deleted |
 | 0010 | Which signals the forecaster starts with |
+| 0011 | What the forecaster predicts, and how it's tested (walk-forward, five baselines) |
+| 0012 | One shared model for every track and year |
+| 0013 | Ranges and chances from the model's own past errors |
+| 0014 | Tyre and stop decisions, and the decision packet |
+| 0015 | The public record: frozen before the race, scored after |
+| 0016 | The debrief: where our cars' time went |
+| 0017 | The race engineer: one model, read-only tools, and an exam |
+| 0018 | The public copy: what's online, how it gets there, where it runs |
 
----
-
-## Quick start
-
-Needs [uv](https://docs.astral.sh/uv/) and Python 3.12.
-
-```bash
-git clone https://github.com/shavkatjony/F1-pace-intelligence.git
-cd F1-pace-intelligence
-make setup                 # install everything with uv
-make test                  # 58 tests, no internet needed
-make data                  # download, build, check. First run downloads 2022–2026: hours, about 40 GB of FastF1 cache
-make run                   # the pit wall app: http://127.0.0.1:8000
-uv run dpec compare 2024_01_Q VER 16 LEC 12
-```
-
-Settings (seasons, our team, the slow-lap limit, the grid step, paths) live in [`config/dpec.yaml`](config/dpec.yaml). Nothing is hard-coded.
+The whole forecaster on one page: [model card](docs/model-card.md). Every table and column: [data dictionary](docs/data-dictionary.md).
 
 ---
 
@@ -174,42 +158,42 @@ Settings (seasons, our team, the slow-lap limit, the grid step, paths) live in [
 
 | Phase | Goal | State |
 |---|---|---|
-| **A · Data** | One command rebuilds clean F1 data for 2022–2026 | ✅ ingest, clean laps, distance grid, results, download log, checks and ID maps |
-| **B · History** | Every "what happened" question answered; which practice signals predict Sunday | ✅ answer tables, forecast inputs, research, pit wall app |
-| **C · Forecast** | Race pace and tyre wear with honest ranges, saved publicly before each session, scored after | ⬜ next |
-| **D · Explain** | Where the time went, plus an AI race engineer that says "not public" when it doesn't know | ⬜ |
-| **E · Public** | Live app and write-up | ⬜ |
-
-How the forecaster will be judged: simple baselines first, walk-forward backtests (never random lap splits, which leak the future), calibrated 80% ranges, and a public record of every forecast.
+| **A · Data** | One command rebuilds clean F1 data for 2022–2026 | ✅ |
+| **B · History** | Every "what happened" question answered; which practice signals predict Sunday; the pit wall app | ✅ |
+| **C · Forecast** | Race pace and tyre wear with honest ranges and decisions; frozen in public before each race, scored after | ✅ live from <first live round> |
+| **D · Explain** | Where the time went; an AI race engineer with a measured pass rate | ✅ |
+| **E · Public** | Live app and write-up | ✅ |
+| Later | Why one car can't match another (a car root-cause module); the starting grid after penalties as a forecast input | ⬜ |
 
 ---
 
 ## What public data can't tell us
 
-Fuel load, car setup, tyre temperatures and pressures, and in 2026 the battery (ERS) and active-aero state are not public. Where the project estimates their effect, it is labelled **estimated**, never shown as measured.
+Fuel load, car setup, tyre temperatures and pressures, engine modes, and in 2026 the battery (ERS) and active-aero state are not public. Where the project estimates their effect, it says **estimated**; where it can't, the race engineer says **not public**.
 
 ---
 
 ## Project layout
 
 ```text
-config/dpec.yaml              all settings
-sql/core/                     the SQL that builds the warehouse
-sql/marts/                    answer tables built on top of the core
+config/                       all settings (dpec.yaml local, public.yaml for the online copy)
+sql/core/ · sql/marts/        the SQL that builds the warehouse and the answer tables
 sql/checks/                   data checks: each returns the rows that break a rule
-seeds/                        small hand-written tables (team names and lineage, known gaps)
 src/telemetry_core/           reusable data layer: ingestion, warehouse, alignment
-src/dpec/cli.py               the dpec commands
-src/dpec/api/                 the read-only API behind the app
-web/app/                      the pit wall app (plain HTML, CSS and JavaScript)
-web/prototype/                the first look-only prototype
+src/dpec/forecasting/         baselines, shared model, backtest, ranges, chances
+src/dpec/decisions/           tyre wear, stop plans, replay, decision packet
+src/dpec/record/              freeze, score, the ledger guard
+src/dpec/debrief/             lap gap by track part, race gap by cause
+src/dpec/assistant/           the race engineer's tools, providers and exam
+src/dpec/api/ · web/app/      the read-only API and the pit wall app
+src/dpec/publish/             the data snapshot for the public copy
+ledger/                       forecasts frozen before each race, and their scores (never edited)
+evals/ · reports/ai/          the 50-question exam and every run's results
+docs/                         decisions, model card, data dictionary, method, live weekends log
+Dockerfile · deploy/          the public image and the Hugging Face Space
 tests/                        unit tests (fake data, no internet)
-docs/decisions/               decision records
-docs/data-dictionary.md       every table and column
-notebooks/02_research/        the research notebook
-reports/                      written results (the B3 report)
 ```
 
 ---
 
-**Author:** Shavkatjon Yuldashev · Data Science, ML, Analytics and AI Engineering · Korea
+**Author:** Shavkatjon Yuldashev · Data Science, ML, Analytics and AI Engineering · Korea · [GitHub](https://github.com/shavkatjony)
