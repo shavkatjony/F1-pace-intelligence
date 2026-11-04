@@ -1,0 +1,15 @@
+id,kind,passed,misses,answer,tools,failed_calls,tokens_in,tokens_out,cached_in,seconds,provider,model
+L01,lookup,True,,"VER (Red Bull Racing) won the 2024 Bahrain Grand Prix, which was round 1 [sql]. He also started from pole [sql].",tables sql,0,10587,182,6272,6.7,claude,claude-opus-5-5
+C05,comparison,True,,"LEC lost the most time on the **straights**, 0.103 s to VER [lap_split].
+
+| Section | LEC vs VER (s, + = LEC slower) |
+|---|---|
+| Straight | +0.103 |
+| Slow corner | +0.093 |
+| Fast corner | +0.012 |
+| Medium corner | -0.057 |
+| Traction | -0.044 |
+| Braking | -0.122 |
+
+All figures are from [lap_split]. The slow-corner loss is the bigger worry relative to its size: it covers only 110 m, while the straights cover about 3,837 m. LEC got the time back under braking, and over these best clean laps he finished 0.014 s *ahead* of VER overall [lap_split].",lap_split,0,4866,506,2181,6.8,claude,claude-opus-5-5
+T01,trap,True,,"That's not public. Teams don't publish fuel loads, and you can't reliably work it out from timing or telemetry data, so I won't give an estimate for HAM's starting fuel at the 2024 Monaco GP. I can pull his race pace for that race instead, either lap by lap or compared with another driver.",,0,2164,123,0,2.5,claude,claude-opus-5-5
