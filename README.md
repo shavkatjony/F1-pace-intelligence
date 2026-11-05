@@ -2,7 +2,7 @@
 
 > Before each Formula 1 race, how fast will each car really be, how sure are we, and what should the team do about tyres and pit stops? Then, after the race: were we right, and where did the time go?
 
-**Live, read-only:** https://<my-hf-name soon >-dpec-pit-wall.hf.space · **3-minute video:** <my video link> · **한국어 요약:** [mydocs/summary-ko.md](docs/summary-ko.md) · **The method, in full:** [docs/methods.md](docs/methods.md)
+**Live, read-only:** https://<my-hf-name soon >-dpec-pit-wall.hf.space · **3-minute video:** <my video link> · **한국어 요약:** [docs/summary-ko.md](docs/summary-ko.md) · **The method, in full:** [docs/methods.md](docs/methods.md)
 
 DPEC is a solo end-to-end project in data engineering, analytics, machine learning and AI, built on public Formula 1 timing data (2022–2026). It works like a small race-team engineering office for one adopted team (Mercedes's two cars): one trusted data foundation, forecasts made only with what was known at the time, **forecasts frozen in public before each race and scored after it**, a debrief of where the time went, and an AI race engineer that answers from the data or says "not public".
 
