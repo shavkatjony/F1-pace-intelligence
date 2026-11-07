@@ -28,9 +28,7 @@ class ClaudeChat:
         client: anthropic.Anthropic | None = None,
     ):
         if client is None and not os.environ.get("ANTHROPIC_API_KEY"):
-            raise ProviderError(
-                "no Claude API key: run `export ANTHROPIC_API_KEY=...` first"
-            )
+            raise ProviderError("no Claude API key: run `export ANTHROPIC_API_KEY=...` first")
         self.client = client or anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
         self.model, self.effort, self.system = model, effort, system
         self.tools = [
