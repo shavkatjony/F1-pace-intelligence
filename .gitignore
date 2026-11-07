@@ -32,6 +32,6 @@ reports/figures/
 # Dry runs of the public record (made after the fact: not the record)
 reports/dry-runs/
 
-# Lesson 20: the public copy
+# The public copy: the data snapshot and its unpacked folder (decision 0018)
 dist/
 snapshot/

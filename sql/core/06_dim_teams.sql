@@ -1,6 +1,6 @@
 -- dim_teams: one row per team name FastF1 uses. The team ID map.
 -- lineage links the names of one team over the years (AlphaTauri -> RB -> Racing Bulls).
--- The names, ids and lineages come from seeds/teams.csv, which you write by hand.
+-- The names, ids and lineages come from seeds/teams.csv, which is kept by hand.
 CREATE OR REPLACE TABLE dim_teams AS
 WITH seen AS (
     SELECT team, season FROM core_laps

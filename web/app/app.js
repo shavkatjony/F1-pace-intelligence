@@ -292,7 +292,7 @@ def("standings", { title: "Standings", mart: "mart_standings", color: "var(--oli
     pickRow(i) } });
 
 def("results", { title: "Results", mart: "core_results", color: "var(--brown)", deps: ["primary", "compare"],
-  hint: "This address is the one you write in Lesson 12, Part 8.",
+  hint: "No results for this session in the warehouse. If they should be there: uv run dpec build.",
   key: c => `${wk(c)}/results/${["Q", "SQ", "S", "R"].includes(c.session) ? c.session : "R"}`,
   load: c => get(`${wk(c)}/results?session=${["Q", "SQ", "S", "R"].includes(c.session) ? c.session : "R"}`),
   render(i, D, c) { const s = ["Q", "SQ", "S", "R"].includes(c.session) ? c.session : "R", race = s === "R" || s === "S";
@@ -307,7 +307,7 @@ const CHECKPOINTS = [["after_practice", "After practice"], ["after_quali", "Afte
 const pct = (v, d = 2) => v == null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(d) + "%";
 const chance = v => v == null ? "—" : Math.round(100 * v) + "%";
 def("forecast", { title: "Race pace forecast", mart: "data/forecasts · shared model", color: "var(--plum)", chart: true, deps: ["primary", "compare"],
-  hint: "Forecasts are made by: uv run dpec backtest (Lesson 15).",
+  hint: "Forecasts are made by: uv run dpec backtest.",
   empty: "No forecast for this weekend. Forecasts start in 2023 (the 2022 races only teach the model), and wet races are not forecast.",
   key: c => `${wk(c)}/forecast`, load: c => get(`${wk(c)}/forecast`),
   render(i, D, c) { const w = i.body.clientWidth, h = i.body.clientHeight; if (w < 50 || h < 50) return;
@@ -347,7 +347,7 @@ def("forecast", { title: "Race pace forecast", mart: "data/forecasts · shared m
 const VERDICT = { GOOD: "var(--teal)", OK: "var(--mustard)", MISS: "var(--red)" };
 const hm = m => m == null ? "—" : m >= 2880 ? Math.round(m / 1440) + " days" : m >= 120 ? Math.round(m / 60) + " h" : m + " min";
 def("record", { title: "Public record", mart: "ledger/ · frozen forecasts and scores", color: "var(--teal)", deps: [],
-  hint: "Forecasts are frozen by: uv run dpec freeze (Lesson 17).",
+  hint: "Forecasts are frozen by: uv run dpec freeze, and scored by: uv run dpec score.",
   key: () => "/record", load: () => Promise.all([get("/record"), get("/record?source=dry-runs")]).then(([ledger, dry]) => ({ ledger, "dry-runs": dry })),
   render(i, all, c) { const src = i.state.src || (PUBLIC && !all.ledger.length ? "dry-runs" : "ledger"), D = all[src], scored = D.filter(d => d.verdict);
     const count = v => scored.filter(d => d.verdict === v).length;
@@ -384,7 +384,7 @@ function splitBars(rows, label, value, lo, hi, w) { // one row per part: a bar f
   out += `<line x1="${X(0)}" x2="${X(0)}" y1="2" y2="${h - 16}" stroke="var(--line-strong)"/>`;
   return svg(w, h, out) }
 def("debrief", { title: "Debrief", mart: "distance grid · core_laps", color: "var(--rose)", deps: ["primary", "compare"],
-  hint: "The debrief is built in Lesson 18.",
+  hint: "The debrief reads core_laps and the raw telemetry saved in data/raw.",
   key: c => `${wk(c)}/debrief/${c.session}/${c.primary}/${c.compare}`, load: c => get(`${wk(c)}/debrief?session=${c.session}&a=${c.primary}&b=${c.compare}`),
   render(i, D, c) { const w = Math.max(260, i.body.clientWidth - 16), two = w > 760, cw = two ? Math.floor((w - 16) / 2) : w;
     i.tb.innerHTML = `<span><b style="color:var(--s1)">A ${D.a}</b> against <b style="color:var(--s2)">B ${D.b}</b> · + = A loses time, − = A gains</span>`;
@@ -399,7 +399,7 @@ const cells = line => line.trim().replace(/^\||\|$/g, "").split("|").map(x => x.
 const table = rows => `<table class="tt">${rows.filter(r => !/^\|?[\s:|-]+\|?$/.test(r)).map((r, n) => `<tr>${cells(r).map(x => n ? `<td>${x}</td>` : `<th>${x}</th>`).join("")}</tr>`).join("")}</table>`;
 const md = t => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(?:^\|.*\|[ \t]*(?:\n|$))+/gm, m => table(m.trim().split("\n")) + "\n").replace(/\n/g, "<br>").replace(/<\/table><br>/g, "</table>");
 def("engineer", { title: "Race engineer", mart: "Claude or Ollama · read-only tools", color: "var(--plum)", deps: ["primary", "compare"],
-  hint: "The race engineer is built in Lesson 19.",
+  hint: "The race engineer needs ANTHROPIC_API_KEY, or Ollama, on this computer.",
   key: () => PUBLIC ? "/chat/recorded" : "/settings", load: () => get(PUBLIC ? "/chat/recorded" : "/settings"),
   render(i, S, c) { if (PUBLIC) return recorded(i, S); const log = i.state.log || (i.state.log = []), busy = log.length && !log[log.length - 1].answer && !log[log.length - 1].error;
     const where = `${c.season} round ${c.round}`;

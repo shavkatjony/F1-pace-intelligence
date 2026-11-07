@@ -2,7 +2,7 @@
 
 The one address that isn't a plain read: it asks a model, which costs money (Claude) or time
 (Ollama). So it only works on the local app; the public copy (mode: public) says no.
-GET /api/chat/recorded is what the public copy shows instead (Lesson 20b): the answers the
+GET /api/chat/recorded is what the public copy shows instead (decision 0018): the answers the
 engineer gave on its exam (dpec eval-ai), read from the newest saved run in reports/ai/.
 """
 

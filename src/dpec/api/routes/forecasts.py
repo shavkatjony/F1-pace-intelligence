@@ -40,6 +40,5 @@ def forecast(request: Request, season: int, round_no: int) -> list[dict]:
         )
     return found
 
-# read it that , you dont need ice americano
 # read_parquet(?): DuckDB reads the saved guesses straight from the Parquet file and joins them with core_results, in one query.
 # Two different 404s: no backtest yet, or no forecast for that weekend (2022, or a wet race).

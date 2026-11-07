@@ -1,6 +1,3 @@
-# oh my hands , is hurting , the testing is takes more effort than itself ,if you know , but try and error is the first principles of upgrade
-
-
 """Warehouse tests: a tiny fake data/raw folder, the real SQL files, no internet."""
 
 from pathlib import Path
@@ -232,12 +229,8 @@ def test_files_table_lists_every_saved_table(wh):
     assert f["n_rows"].tolist() == [9, 2]
     assert not f["is_empty"].any()
 
-# =============================================================
-# these functions are created after 2 table is addded these are dim drivers and dim teams , for testing , chao
-# =============================================================
-
 # ==============================================================
-# Lesson 7: ID maps and checks
+# The driver and team ID maps (dim_drivers, dim_teams) and their checks
 # ==============================================================
 def test_missing_driver_id_is_borrowed_from_the_same_season(tmp_path):
     raw = tmp_path / "raw"

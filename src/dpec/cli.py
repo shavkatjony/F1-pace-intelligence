@@ -1,15 +1,13 @@
 """The `dpec` commands."""
 
-# dear viewer , please ,before change anything ,
-# spend a lots of time as much as possible about f1 rules and regulations and also
-# how the engineers work in the backend ,
-# because if you f**k up , this possible  a lots of days to fix
+# Before changing a command, check the F1 rule behind it (lap rules, tyres, pit stops, points)
+# and how a race engineer would use the number: a wrong rule gives believable but wrong
+# numbers, and it can take days to find.
 import time
 from pathlib import Path
 
 import typer
 
-# we import here the created warehouse that runs the sql and sql (assume that there are temporary files)
 from telemetry_core import warehouse
 from telemetry_core.alignment import distance_grid
 from telemetry_core.alignment.lap_telemetry import load_lap
@@ -655,7 +653,8 @@ def eval_report() -> None:
 @app.command()
 def snapshot(config: str = "config/dpec.yaml") -> None:
     """Pack the data the public copy needs (warehouse, forecasts, public record) into
-    dist/dpec-data-<date>.tar.gz, with checksums. Attach it to a GitHub Release (Lesson 20)."""
+    dist/dpec-data-<date>.tar.gz, with checksums. Attach it to a GitHub Release: the release
+    workflow builds the public image from it."""
     from dpec.publish.snapshot import make_snapshot
 
     s = load_settings(config)

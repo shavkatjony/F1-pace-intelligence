@@ -1,19 +1,13 @@
-"""guys we are here build the very boring and hard thing ,it is feel like going a bazaar with your auntie to bu a pants,and you probably try 20+ of them and your auntie will ask 85% discount from seller that saying it is fixed price.
-to understand the in the column level , probably learn the how f1 works ,
-and then the what is this project probably ,and then explore some columns if you have enough neurons avalable for today and
-if you are reading this after the midday , you need a redbull for that and after drink wait 20 minutes to fully absorb ,
-and then you will have temporary energy ,
-to understand what how much dat we are talking about not what kind ,
-if you want to understand in the column and its type level , start it in the morning ,
-your bran might thank you
-if you add some caffeine it will be better . so good lack"""
+"""The warehouse: one DuckDB file built from plain SQL files.
 
-# |================================================================================================\
-# Welcome to data engineering part of the project
-# shavkhatjon building the duckDB warehouse from the sql files,
-# and we run the queries on it in october 18 ,on sunday, time: 1:29 AM
+build() runs every .sql file of a folder in name order, one table per file, with dbt-style
+{{name}} placeholders. run_checks() runs the data checks in sql/checks, undocumented_columns()
+compares the tables with the data dictionary, and query() runs one read-only query.
+"""
 
-# =======================================================================================
+# ==============================================================================================
+# The data engineering layer: from the raw Parquet files to the tables every other part reads.
+# ==============================================================================================
 
 import re
 from pathlib import Path
@@ -34,7 +28,7 @@ def render(sql: str, params: dict) -> str:
 
 
 def build(sql_dir: Path, warehouse: Path, params: dict) -> dict[str, int]:
-    """we run every sql file in sql_dir in name order. Returns {table: rows}"""
+    """Run every .sql file in sql_dir in name order. Returns {table: rows}."""
     files = sorted(Path(sql_dir).glob("*.sql"))
     if not files:
         raise FileNotFoundError(f"no .sql files in {sql_dir}")

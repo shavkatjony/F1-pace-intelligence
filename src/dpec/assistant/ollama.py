@@ -1,5 +1,5 @@
 """The race engineer on a local model through Ollama (https://ollama.com): free, offline, and
-nothing leaves the Mac. Once: install Ollama and `ollama pull qwen3:8b` (Lesson 19, Part 11).
+nothing leaves the Mac. Once: install Ollama and `ollama pull qwen3:8b`.
 """
 
 import json

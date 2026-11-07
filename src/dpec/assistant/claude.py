@@ -1,6 +1,6 @@
 """The race engineer on Claude, through Anthropic's Python SDK.
 
-Needs an API key in the environment variable ANTHROPIC_API_KEY (Lesson 19, Part 2). The key
+Needs an API key in the environment variable ANTHROPIC_API_KEY. The key
 never goes in config/ or git: the SDK reads it from the environment by itself.
 """
 
@@ -29,7 +29,7 @@ class ClaudeChat:
     ):
         if client is None and not os.environ.get("ANTHROPIC_API_KEY"):
             raise ProviderError(
-                "no Claude API key: run `export ANTHROPIC_API_KEY=...` first (Lesson 19, Part 2)"
+                "no Claude API key: run `export ANTHROPIC_API_KEY=...` first"
             )
         self.client = client or anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
         self.model, self.effort, self.system = model, effort, system

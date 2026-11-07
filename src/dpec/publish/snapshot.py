@@ -1,9 +1,10 @@
 """The data snapshot for the public copy (step E1, decision 0018).
 
 The public app needs the warehouse, the saved forecasts, the public record and the dry runs
-(the pretend 2026 season, Lesson 20b), but not the 4 GB of raw files. make_snapshot() puts
-those few files in one .tar.gz with a SHA256SUMS list, so the image build (and anyone else) can check that nothing changed on the way. The file is
-attached to a GitHub Release; the release workflow builds the Docker image from it.
+(the 2026 season replayed afterwards), but not the 4 GB of raw files. make_snapshot() puts
+those few files in one .tar.gz with a SHA256SUMS list, so the image build (and anyone else)
+can check that nothing changed on the way. The file is attached to a GitHub Release; the
+release workflow builds the Docker image from it.
 """
 
 import hashlib

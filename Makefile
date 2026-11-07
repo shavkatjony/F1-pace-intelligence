@@ -25,7 +25,7 @@ check:
 
 run:
 	uv run dpec serve
-# A race weekend (Lesson 17). After qualifying: make freeze ROUND=19. After the race: make score ROUND=19
+# A race weekend (decision 0015). After qualifying: make freeze ROUND=19. After the race: make score ROUND=19
 SEASON ?= 2026
 CHECKPOINT ?= after_quali
 
@@ -41,7 +41,7 @@ score:
 	uv run dpec check
 	uv run dpec score --season $(SEASON) --round $(ROUND)
 
-# The public copy (Lesson 20)
+# The public copy (decision 0018)
 snapshot:
 	uv run dpec snapshot
 
