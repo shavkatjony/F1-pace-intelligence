@@ -32,6 +32,8 @@ def test_snapshot_has_the_data_and_checksums_that_catch_a_change(tmp_path, monke
     (tmp_path / "data" / "forecasts" / "backtest.parquet").write_bytes(b"PAR1")
     (tmp_path / "ledger" / "2026" / "19-test").mkdir(parents=True)
     (tmp_path / "ledger" / "2026" / "19-test" / "after_quali.json").write_text("{}")
+    (tmp_path / "reports" / "dry-runs" / "2026" / "01-test").mkdir(parents=True)
+    (tmp_path / "reports" / "dry-runs" / "2026" / "01-test" / "score.json").write_text("{}")
     s = load_settings(Path(__file__).parents[2] / "config" / "dpec.yaml")
     s = s.model_copy(
         update={
@@ -48,6 +50,7 @@ def test_snapshot_has_the_data_and_checksums_that_catch_a_change(tmp_path, monke
         "data/warehouse.duckdb",
         "data/forecasts/backtest.parquet",
         "ledger/2026/19-test/after_quali.json",
+        "reports/dry-runs/2026/01-test/score.json",
         "SHA256SUMS",
         "manifest.json",
     }

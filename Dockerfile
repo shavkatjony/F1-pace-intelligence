@@ -17,6 +17,9 @@ COPY src ./src
 RUN uv sync --frozen --no-dev
 COPY config ./config
 COPY web/app ./web/app
+# the race engineer's exam and its recorded answers: shown online instead of live questions
+COPY evals/questions.yaml ./evals/questions.yaml
+COPY reports/ai ./reports/ai
 
 # 3. The data snapshot (dpec snapshot, unpacked into snapshot/), checked file by file
 COPY snapshot/ ./

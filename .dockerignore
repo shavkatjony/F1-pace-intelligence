@@ -7,4 +7,6 @@
 !config/
 !web/app/
 !snapshot/
+!evals/questions.yaml
+!reports/ai/
 **/__pycache__

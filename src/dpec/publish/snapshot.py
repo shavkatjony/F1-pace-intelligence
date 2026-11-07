@@ -1,8 +1,8 @@
 """The data snapshot for the public copy (step E1, decision 0018).
 
-The public app needs the warehouse, the saved forecasts and the public record, but not the
-4 GB of raw files. make_snapshot() puts those few files in one .tar.gz with a SHA256SUMS list,
-so the image build (and anyone else) can check that nothing changed on the way. The file is
+The public app needs the warehouse, the saved forecasts, the public record and the dry runs
+(the pretend 2026 season, Lesson 20b), but not the 4 GB of raw files. make_snapshot() puts
+those few files in one .tar.gz with a SHA256SUMS list, so the image build (and anyone else) can check that nothing changed on the way. The file is
 attached to a GitHub Release; the release workflow builds the Docker image from it.
 """
 
@@ -16,6 +16,8 @@ from pathlib import Path
 from dpec.record.ledger import LEDGER, code_version
 from telemetry_core.config import Settings
 from telemetry_core.warehouse import query
+
+DRY_RUNS = Path("reports/dry-runs")
 
 
 def sha256(path: Path) -> str:
@@ -32,6 +34,9 @@ def snapshot_files(s: Settings) -> dict[str, Path]:
     for path in sorted((s.paths.data / "forecasts").glob("*.parquet")):
         files[f"data/forecasts/{path.name}"] = path
     for path in sorted(LEDGER.rglob("*.json")):
+        files[path.as_posix()] = path
+    # the dry runs (dpec pretend): the online record shows them, labelled as dry runs
+    for path in sorted(DRY_RUNS.rglob("*.json")):
         files[path.as_posix()] = path
     return files
 

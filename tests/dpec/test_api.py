@@ -127,6 +127,7 @@ def test_results_in_finishing_order(client):
     assert [d["driver_code"] for d in r] == ["VER", "HAM"]
     assert r[1]["status"] == "Disqualified"
 
+
 def test_forecast_needs_a_backtest_first(client):
     r = client.get("/api/weekends/2024/1/forecast")
     assert r.status_code == 404
@@ -158,7 +159,8 @@ def test_forecast_shows_the_saved_guesses(client, tmp_path):
     assert [d["driver_code"] for d in f] == ["VER", "HAM"]  # shared model only, best guess first
     assert f[0]["finish_position"] == 1 and f[0]["p_beats_teammate"] is None
     assert client.get("/api/weekends/2022/1/forecast").status_code == 404
-    
+
+
 def test_record_lists_frozen_weekends(client, tmp_path, monkeypatch):
     from test_record import fake_forecast
 
@@ -171,7 +173,7 @@ def test_record_lists_frozen_weekends(client, tmp_path, monkeypatch):
     assert [(d["round"], d["intact"], d["verdict"]) for d in r] == [(19, True, None)]
     assert r[0]["frozen"][0]["minutes_early"] == 20 * 60
     assert [o["driver_code"] for o in r[0]["ours"]] == ["D0", "D1"]
-    
+
 
 def test_debrief_splits_the_lap_and_says_why_the_race_part_is_missing(client):
     r = client.get("/api/weekends/2024/1/debrief", params={"a": "ham", "b": "VER", "session": "R"})
@@ -210,3 +212,25 @@ def test_public_copy_has_no_telemetry_but_keeps_the_rest(client):
     d = client.get("/api/weekends/2024/1/debrief", params={"session": "R", "a": "HAM", "b": "VER"})
     assert "local app" in d.json()["lap_note"]
     assert client.get("/api/health").json()["latest_event"] == "Test Grand Prix"
+
+
+def test_recorded_answers_join_the_newest_run_with_its_questions(tmp_path, client):
+    from dpec.api.routes.chat import recorded_answers
+
+    questions = tmp_path / "questions.yaml"
+    questions.write_text("- id: L01\n  kind: lookup\n  question: Who won?\n")
+    head = "id,kind,passed,misses,answer,tools,failed_calls,tokens_in,tokens_out,cached_in,seconds,provider,model\n"
+    (tmp_path / "eval-claude-m-2026-11-01.csv").write_text(
+        head + "L01,lookup,False,VER,HAM,sql,0,1,1,0,1.0,claude,m\n"
+    )
+    (tmp_path / "eval-claude-m-2026-11-03.csv").write_text(
+        head + "L01,lookup,True,,VER [sql],tables sql,0,100,20,0,6.7,claude,m\n"
+    )
+    r = recorded_answers(tmp_path, questions)
+    assert r["recorded_on"] == "2026-11-03" and r["passed"] == 1
+    a = r["answers"][0]
+    assert a["question"] == "Who won?" and a["tools"] == ["tables", "sql"] and a["tokens"] == 120
+    assert recorded_answers(tmp_path / "none", questions)["answers"] == []
+    # the address itself takes no inputs, and the public copy keeps it
+    client.app.state.settings = client.app.state.settings.model_copy(update={"mode": "public"})
+    assert client.get("/api/chat/recorded").status_code == 200

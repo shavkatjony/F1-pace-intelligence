@@ -3,13 +3,21 @@
 
 const cache = new Map();
 
+// An error that keeps its parts, so a window can choose what to say: the full text on the local
+// app, one plain sentence on the public copy. A network failure has no status at all.
+function problem(status, detail, where) {
+  const error = new Error(`${status} · ${detail} (${where})`);
+  Object.assign(error, { status, detail, where });
+  return error;
+}
+
 export function get(path) {
   if (!cache.has(path)) {
     const answer = fetch("/api" + path).then(async (response) => {
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
         const detail = typeof body.detail === "string" ? body.detail : response.statusText;
-        throw new Error(`${response.status} · ${detail} (GET /api${path})`);
+        throw problem(response.status, detail, `GET /api${path}`);
       }
       return response.json();
     });
@@ -29,7 +37,7 @@ export async function post(path, body) {
   const answer = await response.json().catch(() => ({}));
   if (!response.ok) {
     const detail = typeof answer.detail === "string" ? answer.detail : response.statusText;
-    throw new Error(`${response.status} · ${detail}`);
+    throw problem(response.status, detail, `POST /api${path}`);
   }
   return answer;
 }

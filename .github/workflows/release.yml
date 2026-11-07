@@ -39,6 +39,7 @@ jobs:
           curl -sf localhost:7860/api/health | grep -q '"mode":"public"'
           curl -sf localhost:7860/ | grep -q '<title>'
           curl -sf localhost:7860/api/weekends | grep -q '"winner"'
+          curl -sf localhost:7860/api/chat/recorded | grep -q '"answers":\[{'
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:7860/api/chat \
             -H 'Content-Type: application/json' -d '{"question": "Who won?"}')
           test "$code" = 403

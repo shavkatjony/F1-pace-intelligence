@@ -240,6 +240,17 @@ body.solo .ws{grid-auto-rows:calc((100vh - 70px)/5)}
 .win-b.busy{opacity:.5;transition:opacity .25s}
 .err{padding:12px 14px;font:13px/1.5 var(--f-mono);color:var(--red)}
 .err small{display:block;color:var(--muted);margin-top:6px}
+/* the public copy: plain empty states in grey, the technical detail folded away */
+.empty{padding:14px 16px;font:13px/1.5 var(--f-mono);color:var(--muted)}
+.empty p{margin:0 0 6px;color:var(--ink)}
+.empty details summary{cursor:pointer;font-size:12px}
+.empty code{display:block;margin-top:4px;font-size:12px;white-space:pre-wrap;word-break:break-word}
+.hide-src .win-h .mart{display:none}
+.banner{border-left:4px solid var(--mustard);background:var(--panel2);margin:6px 10px;padding:6px 10px}
+.picture{display:grid;gap:8px;align-content:start}
+.picture p{margin:0}
+.picture img{width:100%;max-height:100%;object-fit:contain;border:1px solid var(--line);border-radius:4px;background:#fff}
+.sugg button[aria-pressed="true"]{background:var(--plum);color:var(--panel);border-style:solid}
 .live{font:700 12px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;background:var(--teal);color:var(--panel);padding:5px 8px;border-radius:4px}
 .tt td.dim{color:var(--muted)}
 
