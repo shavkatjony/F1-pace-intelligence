@@ -1,7 +1,8 @@
 # 0009 · Track evolution
 
-Date: 2026-10-18
+Date: 2026-10-22
 Status: accepted
+Builds on: [0003](0003-clean-laps.md) clean laps, [0007](0007-marts.md) marts, [0008](0008-stints-and-long-runs.md) stints and long runs
 
 ## Decision
 mart_track_evolution: one row per practice and qualifying session. evo_s_per_10min = slope

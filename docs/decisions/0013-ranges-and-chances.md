@@ -1,7 +1,8 @@
 # 0013 · Ranges and chances from the model's own past errors
 
-Date: 2026-10-24
+Date: 2026-10-28
 Status: accepted
+Builds on: [0011](0011-target-and-fair-test.md) target and fair test, [0012](0012-shared-model.md) shared model
 
 ## Decision
 - 80% range = guess ± the 80th percentile of the size of the model's errors over the last

@@ -2,6 +2,7 @@
 
 Date: 2026-10-11
 Status: accepted
+Builds on: nothing earlier (a starting decision)
 
 ## Decision
 Team DPEC adopts Mercedes as the official real-world constructor whose telemetry and race data we track, model, and forecast.
@@ -13,7 +14,7 @@ Team DPEC adopts Mercedes as the official real-world constructor whose telemetry
 ## Rejected options
 - Red Bull: Too dominant during large portions of this era, making competitive forecasting and performance anomaly detection less interesting.
 - Haas: Limited development budgets and data consistency make deep telemetry insights harder to benchmark consistently.
-- Ferrari: makes me depressed, i do not want kill my nerves
+- Ferrari: I follow it as a fan, so I'd be too emotionally involved to judge its data neutrally.
 
 ## Changing it later
 Edit `adopted_team` in config/dpec.yaml. No code change.

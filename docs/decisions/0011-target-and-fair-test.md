@@ -1,7 +1,8 @@
 # 0011 · What the forecaster predicts, and how it's tested
 
-Date: 2026-10-24
+Date: 2026-10-27
 Status: accepted
+Builds on: [0010](0010-forecast-signals.md) forecast signals
 
 ## Decision
 - Target: race_pace_gap_pct, a driver's median clean race lap as % behind the best median

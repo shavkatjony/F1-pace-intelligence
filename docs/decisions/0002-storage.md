@@ -2,6 +2,7 @@
 
 Date: 2026-10-11
 Status: accepted
+Builds on: nothing earlier (a starting decision)
 
 ## Decision
 Store raw telemetry as partitioned Parquet files and use DuckDB as the local analytical database warehouse, avoiding any heavy traditional database server.

@@ -1,7 +1,8 @@
 # 0017 · The race engineer: one model, read-only tools, and an exam
 
-Date: 2026-11-05
+Date: 2026-11-04
 Status: accepted
+Builds on: [0007](0007-marts.md) marts, [0011](0011-target-and-fair-test.md) target and fair test, [0014](0014-decision-packet.md) decision packet, [0015](0015-public-record.md) public record, [0016](0016-debrief.md) debrief
 
 ## Decision
 - One race engineer: a language model with eight read-only tools (tables, sql, lap_split,
@@ -12,9 +13,10 @@ Status: accepted
   a read-only connection, 10 s timeout, 50 rows, 20,000 characters.
 - Provider: Claude (claude-opus-5-5, effort medium, prompt caching, server-side fallback)
   by default; Ollama (qwen3:8b) for free offline use. Same tools, same loop, same exam.
-- At most 8 tool calls per question. The chat only runs on the local app (it costs money).
-- No router over several agents (plan file 10): the exam showed no kind of question that
-  needed one. Revisit only if a kind fails and a second agent fixes it on the same exam.
+- At most 8 tool calls per question. Live questions only run on the local app, because each
+  one costs money; the public copy shows the answers from the newest exam run instead.
+- One agent, not a router over several: add a second agent only if a kind of question fails
+  on the exam and the second agent fixes it on the same exam.
 
 ## Why
 A model that doesn't know a number invents a plausible one. Tools over the warehouse make

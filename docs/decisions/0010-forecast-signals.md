@@ -1,7 +1,8 @@
 # 0010 · Which signals the forecaster starts with
 
-Date: 2026-10-22
+Date: 2026-10-24
 Status: accepted
+Builds on: [0007](0007-marts.md) marts, [0008](0008-stints-and-long-runs.md) stints and long runs, [0009](0009-track-evolution.md) track evolution
 
 ## Decision
 Qualifying pace is the main signal. FP2 long runs are a second input and a sanity check;

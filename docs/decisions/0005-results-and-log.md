@@ -2,6 +2,7 @@
 
 Date: 2026-10-19
 Status: accepted
+Builds on: [0002](0002-storage.md) storage, [0003](0003-clean-laps.md) clean laps
 
 ## Decision
 - core_results comes from FastF1's results files, which already carry

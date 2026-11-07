@@ -1,7 +1,8 @@
 # 0012 · One shared model for every track and year
 
-Date: 2026-10-24
+Date: 2026-10-27
 Status: accepted
+Builds on: [0010](0010-forecast-signals.md) forecast signals, [0011](0011-target-and-fair-test.md) target and fair test
 
 ## Decision
 - After practice: race gap ~ team_form + driver_vs_team. After quali: + quali_gap_pct.

@@ -1,7 +1,8 @@
 # 0014 · Tyre and stop decisions, and the decision packet
 
-Date: 2026-10-24
+Date: 2026-10-28
 Status: accepted
+Builds on: [0008](0008-stints-and-long-runs.md) stints and long runs, [0012](0012-shared-model.md) shared model, [0013](0013-ranges-and-chances.md) ranges and chances
 
 ## Decision
 - Race tyre wear = regression on earlier races: practice wear + this circuit's earlier race

@@ -2,20 +2,25 @@
 
 Date: 2026-11-04
 Status: accepted
+Updated: 2026-11-05 (Render instead of Hugging Face), 2026-11-08 (the friendly public copy)
+Builds on: [0002](0002-storage.md) storage, [0015](0015-public-record.md) public record, [0017](0017-race-engineer.md) race engineer
 
 ## Decision
-- A read-only copy of the pit wall is online: [F1 Pace Intelligence — Live Demo](https://f1-pace-intelligence.onrender.com).
+- A read-only copy of the pit wall is online: [F1 Pace Intelligence, online demo](https://f1-pace-intelligence.onrender.com).
   It has the forecasts, the public record, the tyre decisions, the weekends, weather and
-  standings, and the race part of the debrief. Settings: config/public.yaml, the same as
+  standings, the race part of the debrief, and the race engineer's recorded exam answers. Settings: config/public.yaml, the same as
   config/dpec.yaml except `mode: public` (a test fails if they drift apart).
 - Local only: the telemetry traces and the lap split (they read 4 GB of raw files; the API
-  answers 404 with the reason), and the race engineer (it costs money per question; 403).
-- The data: `dpec snapshot` packs the warehouse, the saved forecasts and the ledger
-  (about 11 MB) with a SHA-256 per file and a manifest, and the file is attached to a
-  GitHub Release. Data never goes into git.
+  answers 404 with the reason), and live questions to the race engineer (each costs money;
+  the API answers 403). Online, those windows explain this in one sentence and show a
+  picture or the recorded answers instead.
+- The data: `dpec snapshot` packs the warehouse, the saved forecasts, the ledger and the
+  2026 dry runs (12.5 MB for v1.2) with a SHA-256 per file and a manifest, and the file is
+  attached to a GitHub Release. Data never goes into git.
 - The image: on each published release, a GitHub workflow builds a Docker image from the
   tagged code, stops if a checksum doesn't match, starts it, checks it's the public copy
-  (public mode, the page, the weekends, chat refused), then pushes it to ghcr.io as
+  (public mode, the snapshot's date, the page, the weekends, the recorded answers, chat
+  refused), then pushes it to ghcr.io as
   :<tag> and :latest. The image runs as a normal user, not root.
 - The host: a free Render web service that runs the :latest image (a Hugging Face Space
   until 5 November: see the update). New data = a new release, then Manual Deploy on Render.
@@ -33,10 +38,10 @@ Status: accepted
   code, built on a clean machine and tested before it's published, with a public log.
 
 ## Evidence
-- 127 tests, including: the public settings differ from the local ones only in `mode`;
-  the snapshot holds exactly the warehouse, the forecasts and the ledger, and its
+- Tests, including: the public settings differ from the local ones only in `mode`; the
+  snapshot holds exactly the warehouse, the forecasts, the ledger and the dry runs, and its
   checksums catch a one-character change; the public API refuses telemetry (404) and chat
-  (403) and keeps the rest.
+  (403) and keeps the rest; the recorded answers join the newest exam run with its questions.
 - Release v1.2 (5 November): the release run built the image from the tagged code, checked
   every file of the 12.5 MB data snapshot, started it, passed the smoke test and pushed it
   to ghcr.io as :v1.2 and :latest. Render runs it.
@@ -46,10 +51,10 @@ Status: accepted
   new release.
 
 ## Known limits
-- The online copy is as fresh as the last release, not live: the ledger on GitHub is
-  always the up-to-date record.
+- The online copy is a fixed snapshot, not a live feed: it is as fresh as the last release.
+  Its footer shows the date the snapshot was packed and the last race in it.
 - A visitor after 15 quiet minutes waits about a minute.
-- No telemetry traces online: the README pictures and the video show them.
+- No telemetry traces online: their windows show a picture made from the same data.
 - If Render changes its free tier, the same image runs on any Docker host.
 
 ## Update (5 November 2026): Render instead of Hugging Face
@@ -63,3 +68,14 @@ Status: accepted
   :latest changes, so after each release: Manual Deploy > Deploy latest reference.
 - Next: a static copy on GitHub Pages (every answer saved as a file), which never sleeps.
 - deploy/huggingface/ stays: it still works for anyone with PRO.
+
+## Update (8 November 2026): a copy for visitors, not developers
+- Messages: an empty or local-only window says in one plain sentence why, and what to look
+  at instead. The status code and address stay under "Details".
+- The race engineer's window shows the questions and answers of its newest exam run, with
+  pass or fail, the tools it used, the time and the tokens.
+- The public record says there are 0 live weekends and why, and shows the 2026 dry runs
+  labelled "replayed afterwards".
+- The footer shows the snapshot's date and the last race in it, never "live" or "real-time".
+- Online, table names on window titles are hidden by default (Settings > Data sources shows
+  them); the local app shows them.

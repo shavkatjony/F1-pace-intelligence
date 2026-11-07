@@ -1,7 +1,8 @@
 # 0008 · Tyre stints, long runs and the fuel effect
 
-Date: 2026-10-18
+Date: 2026-10-22
 Status: accepted
+Builds on: [0003](0003-clean-laps.md) clean laps, [0007](0007-marts.md) marts
 
 ## Decision
 - mart_stints: one row per tyre set per driver per session. deg = slope of clean lap

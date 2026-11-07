@@ -2,6 +2,7 @@
 
 Date: 2026-11-03
 Status: accepted
+Builds on: [0003](0003-clean-laps.md) clean laps, [0004](0004-distance-grid.md) distance grid, [0011](0011-target-and-fair-test.md) target and fair test, [0015](0015-public-record.md) public record
 
 ## Decision
 - Qualifying: each of our drivers' best clean lap against the session's fastest clean lap,

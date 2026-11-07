@@ -1,7 +1,8 @@
 # 0003 · Clean tables and lap rules
 
-Date: 2026-10-17
+Date: 2026-10-18
 Status: accepted
+Builds on: [0002](0002-storage.md) storage
 
 ## Decision
 Two core tables built by `dpec build` from plain SQL files run in DuckDB:
