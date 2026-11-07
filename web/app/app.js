@@ -598,11 +598,11 @@ async function start() {
   if (!WEEKENDS.length) { $("#ws").innerHTML = PUBLIC ? `<div class="empty" style="grid-column:1/-1"><p>This copy has no race weekends in it.</p></div>` : `<div class="err" style="grid-column:1/-1">The warehouse has no weekends yet.<small>Run "make data" first.</small></div>`; return }
   $("#oursNote").textContent = PUBLIC ? `${SETTINGS.adopted_team}: their two cars carry ★ OURS in every window.` : `${SETTINGS.adopted_team} (adopted_team in config/dpec.yaml). Their cars carry ★ OURS.`;
   get("/health").then(hl => {
-    // The data is a fixed snapshot, never a live feed: say how fresh it is, with real dates.
-    const day = d => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    const upTo = `the ${hl.latest} ${hl.latest_event}${hl.latest_date ? ` (${day(hl.latest_date)})` : ""}`;
+    // The data is a fixed snapshot, never a live feed: say how fresh it is, with real dates
+    // (in the same date format as the rest of the page).
+    const upTo = `the ${hl.latest} ${hl.latest_event}${hl.latest_date ? ` (${fmtDate(hl.latest_date)})` : ""}`;
     $("#modeNote").textContent = `${PUBLIC ? "public copy" : "local"} · ${hl.sessions} sessions · data up to ${upTo}`;
-    $("#footSnap").textContent = hl.snapshot ? `Snapshot · ${day(hl.snapshot.made)}` : PUBLIC ? "Recorded data" : "Local data";
+    $("#footSnap").textContent = hl.snapshot ? `Snapshot · ${fmtDate(hl.snapshot.made)}` : PUBLIC ? "Recorded data" : "Local data";
     $("#footNote").textContent = PUBLIC
       ? `Recorded F1 timing data up to ${upTo}. Not a live feed: it changes only when a new snapshot is released.`
       : `Recorded F1 timing data up to ${upTo}, from your warehouse. Read-only.`;
