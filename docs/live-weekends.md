@@ -27,6 +27,8 @@ a test of the pipeline, never a live record.
 
 ## The dry runs, race by race
 
+![The public record window online: 0 live weekends, and the 2026 dry runs labelled "replayed afterwards"](images/public-record.png)
+
 Made after qualifying, with only what was known then. Round 16 (Bahrain) was a wet race, so it
 has no race pace to score.
 
