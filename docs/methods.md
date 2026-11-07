@@ -24,20 +24,20 @@ I split the project into five phases, each ending in a gate: a short checklist t
 |---|---|
 | A · Data | one command rebuilds clean data for 2022–2026, with checks |
 | B · History | every "what happened" question answered; research on which signals predict race pace; the app |
-| C · Forecast | forecasts with honest ranges and a checkable decision; one forecast frozen in public before a race and scored after |
+| C · Forecast | forecasts with honest ranges and a checkable decision; one forecast frozen in public before a race and scored after (this last part couldn't happen: section 9) |
 | D · Explain | a debrief that splits the time; an AI assistant with a measured pass rate |
-| E · Public | a live copy and a write-up a stranger understands in two minutes |
+| E · Public | an online copy and a write-up a stranger understands in two minutes |
 
 Three habits held for the whole project:
 - **Decision records.** Each real choice (18 of them) has a one-page record: what I decided, why, what I rejected, and the known limits.
-- **Tests and checks on every change.** Unit tests on fake data (127 at the end, no internet needed) and data checks on the real warehouse (21), both in CI on every push.
+- **Tests and checks on every change.** Unit tests on fake data (129 at the end, no internet needed) and data checks on the real warehouse (20, plus a check that the data dictionary covers every column), both in CI on every push.
 - **Nothing hard-coded.** Seasons, our team, thresholds and paths live in one settings file, read through typed settings that refuse unknown keys.
 
 ## 3. The data
 
 **Source.** Everything comes from the official F1 timing feed through FastF1: laps, sectors, tyres, weather, car telemetry, results. FastF1 also stores the official classification (from the Jolpica service), so I didn't build a second adapter for results (decision 0005). OpenF1 was only used to cross-check a few values.
 
-**Ingest once, never edit.** `dpec ingest` downloads every session of 2022–2026 once, into Parquet files that are never changed afterwards, with a manifest that records row counts and a SHA-256 fingerprint per file. Re-runs only fetch sessions that are new. By October 2026: 545 sessions (practice, sprint, qualifying, race), 297,724 laps, 4.1 GB of raw files (plus 34 GB of FastF1's own cache).
+**Ingest once, never edit.** `dpec ingest` downloads every session of 2022–2026 once, into Parquet files that are never changed afterwards, with a manifest that records row counts and a SHA-256 fingerprint per file. Re-runs only fetch sessions that are new. By October 2026: 545 sessions (practice, sprint, qualifying, race), 297,724 laps, 4.1 GB of raw files (plus 34 GB of FastF1's own cache). That is also where the data stops: since October 2026, F1's timing data needs a login, so nothing after the Singapore Grand Prix (11 October 2026) could be downloaded (section 9).
 
 **Warehouse.** `dpec build` rebuilds a DuckDB file from plain SQL (decision 0002: a file, not a database server, because one person runs it and the data fits on a laptop). Core tables hold one clean row per session, lap, result and driver; answer tables ("marts") on top of them answer the common questions: weekends, weather, standings, pace, tyre stints, long runs, track evolution, the forecaster's weekend signals and race strategy.
 
@@ -97,7 +97,7 @@ Before building a model I asked which signals known before the race predict the 
 
 **Where it doesn't win:** the per-year model puts drivers in a slightly better order after qualifying (Spearman 0.843 against 0.821). After the 2026 rules change, simple guesses did as well for the first ~5 races and the ranges were too narrow there (68% inside after practice); the model caught up after that.
 
-**Honest ranges and chances** (decision 0013). The 80% range is split-conformal and walk-forward: the 80th percentile of the model's **own** errors over its last 10 forecast weekends. On 2025–26, 78.5% (after practice) and 79.9% (after qualifying) of real race paces landed inside: the ranges mean what they say. The chances come from 4,000 replays of the race order drawn from those errors; the chance of a top-3 race pace scores 0.077 on the Brier score after qualifying, against 0.132 with no information.
+**Honest ranges and chances** (decision 0013). The 80% range is split-conformal and walk-forward: the 80th percentile of the model's **own** errors over its last 10 forecast weekends. On 2025–26, 78.5% (after practice) and 79.9% (after qualifying) of real race paces landed inside: the ranges mean what they say. The chances come from 4,000 replays of the race order drawn from those errors; on 2025–26 the chance of a top-3 race pace scores 0.070 on the Brier score after qualifying, against 0.129 with no information (over all forecast years, 2023–26: 0.077 against 0.131).
 
 ## 8. From a forecast to a decision
 
@@ -113,14 +113,14 @@ Example: for Bahrain 2024 the packet said 1 stop (best in 74% of replays) and na
 
 ## 9. In public: frozen before the race, scored after
 
-A backtest, however careful, is run after the races by the person who built the model. Nobody can check that I didn't try twenty models and keep the best. So from Phase C on, forecasts are also made **in public** (decision 0015):
+A backtest, however careful, is run after the races by the person who built the model. Nobody can check that I didn't try twenty models and keep the best. So the project was built to make forecasts **in public** too (decision 0015):
 - After qualifying, `dpec freeze` writes every car's forecast, range and chances, the five baselines' guesses and the tyre decision into one JSON file under `ledger/`. The file carries the SHA-256 of its own content.
-- I push it before the deadline, 30 minutes before the race. The time that counts is GitHub's, not my laptop's: a CI job fails if a forecast reached GitHub after its deadline, or if any frozen file is ever changed or deleted.
+- It is pushed before the deadline, 30 minutes before the race. The time that counts is GitHub's, not my laptop's: a CI job fails if a forecast reached GitHub after its deadline, or if any frozen file is ever changed or deleted.
 - After the race, `dpec score` writes a separate score file: error, the share inside the ranges, skill against team form, Spearman, the tyre decision's checks, and a one-word verdict (GOOD, OK, MISS).
 
-**Dress rehearsal.** Before the first live weekend I ran the live code on 2026 rounds 1–17 as dry runs (kept apart from the record, labelled "made after the fact"): 16 dry races, 322 driver-races, error 0.573%, exactly the backtest's 0.573% (largest difference 0.0000%), so the live path is the tested path. 81% of real paces landed inside the ranges, the model beat team form on 14 of 16 weekends, and the verdicts were 11 GOOD, 4 OK, 1 MISS.
+**Dry runs.** I ran the live code on 2026 rounds 1–17 after the races, as dry runs (kept apart from the record, labelled "replayed afterwards"): 16 dry races, 322 driver-races, error 0.573%, exactly the backtest's 0.573% (largest difference 0.0000%), so the live path is the tested path. 81% of real paces landed inside the ranges, the model beat team form on 14 of 16 weekends, and the verdicts were 11 GOOD, 4 OK, 1 MISS.
 
-**Live weekends.** <number> weekends frozen before the race so far, starting from <first live round>. Each one, with its deadline, the time it was frozen and its score, is in [`docs/live-weekends.md`](live-weekends.md).
+**Live weekends: 0.** In October 2026 F1 put a login on its timing data (FastF1 3.9 asks for a paid F1TV Access subscription), so no new session could be downloaded and no forecast could be frozen before a race. I decided to stop at the races already saved rather than call the dry runs a live record. What each kind of result means, and how to restart: [`docs/live-weekends.md`](live-weekends.md).
 
 FastF1 publishes a session about three hours after it starts, so the freeze window runs from qualifying + 3 hours to the race − 30 minutes. A weekend I miss is a gap in the record, not a hidden result; a wet race stays in the record unscored.
 
@@ -144,26 +144,27 @@ The last piece is an assistant that answers questions about any session since 20
 
 **It has an exam,** because "it seems to work" isn't a result. 50 questions in five kinds (18 lookups, 12 comparisons, 8 forecast questions, 7 decision questions, 5 traps that must be refused). Each right answer is **computed from the warehouse when the exam runs**, so the exam stays correct as races arrive, and a grader reads the numbers and names out of each answer. Results:
 
-- Claude: **<overall>%** overall, <traps> of 5 traps refused, about $<cost> per run of 50 questions.
-- Local model (Ollama): <ollama result>.
+- Claude (claude-opus-5-5), 8 November 2026: **50 of 50 passed**, every kind at 100%, 5 of 5 traps refused, $1.53 for the run at list prices, a median of 7 seconds a question. Every answer that wasn't a trap called at least one tool; when a tool call returned an error (in 18 questions), the model corrected it and still passed.
+- Local model (Ollama): the same exam runs on it (`dpec eval-ai --provider ollama`), but it hasn't had a full run yet.
 
-I didn't build a multi-agent router: one engineer with tools is simpler to test, and a second, specialised agent is only worth adding if the exam shows a kind of question it would fix. The grader has known weak spots (a small number like "2" can appear elsewhere in a sentence; a number written in words isn't read), written down in the decision record.
+I didn't build a multi-agent router: one engineer with tools is simpler to test, every kind of question passed with it, and a second, specialised agent is only worth adding if the exam shows a kind of question it would fix. The grader has known weak spots (a small number like "2" can appear elsewhere in a sentence; a number written in words isn't read), written down in the decision record.
 
 ## 12. The public copy
 
-The app is online, read-only, at <https://f1-pace-intelligence.onrender.com> (decision 0018). Two things stay on my machine: the telemetry traces (they need the 4 GB of raw files) and the race engineer (each question costs money).
+The app is online, read-only, at <https://f1-pace-intelligence.onrender.com> (decision 0018). Two things stay on my machine: the telemetry traces (they need the 4 GB of raw files) and live questions to the race engineer (each one costs money). Online, those windows say why in one sentence and show a picture of the traces, or the engineer's recorded exam answers.
 
 Getting it there works like a real release:
-1. `dpec snapshot` packs what the public app needs (the warehouse, the saved forecasts and the ledger: about 11 MB) into one file, with a SHA-256 checksum per file and a manifest of the data and the code version.
+1. `dpec snapshot` packs what the public app needs (the warehouse, the saved forecasts, the ledger and the 2026 dry runs: 12.5 MB for v1.2) into one file, with a SHA-256 checksum per file and a manifest of the data and the code version.
 2. I attach that file to a **GitHub Release**. Data never goes into git: a binary that changes every weekend would stay in the history forever.
-3. A workflow builds a **Docker image** from the code at the release's tag. The build stops if one checksum doesn't match. It starts the image and checks that it's the public copy (public mode, the page loads, the weekends are there, the chat answers 403) before it publishes anything.
-4. A free **Hugging Face Space** runs that image. It sleeps after two days without visitors…` | `A free **Render** web service runs that image. It sleeps after 15 minutes without visitors and wakes in about a minute.
+3. A workflow builds a **Docker image** from the code at the release's tag. The build stops if one checksum doesn't match. It starts the image and checks that it's the public copy (public mode, the snapshot's date, the page loads, the weekends and the recorded answers are there, the chat answers 403) before it publishes anything.
+4. A free **Render** web service runs that image (first planned on a Hugging Face Space, until Hugging Face asked for a paid plan to run Docker). It sleeps after 15 minutes without visitors and wakes in about a minute.
+5. The page footer shows the snapshot's date and the last race in it. The online copy is a versioned snapshot, never presented as a live feed.
 
 ## 13. Engineering
 
 - **Python 3.12, uv** with a lock file (the same library versions on my Mac, in CI and in the image), **DuckDB**, plain SQL for every table, **FastAPI** for a read-only API (every request opens a read-only connection; every value goes in as a SQL parameter), a plain JavaScript app with linked windows, **statsmodels** for the regressions.
-- **127 unit tests** on fake data: they need no internet and no API key, so CI runs them on every push. The AI tests use a stand-in model and a stand-in server that checks the exact request format.
-- **21 data checks** on the real warehouse, and a data dictionary that the build checks against the tables.
+- **129 unit tests** on fake data: they need no internet and no API key, so CI runs them on every push. The AI tests use a stand-in model and a stand-in server that checks the exact request format.
+- **20 data checks** on the real warehouse, plus a check that the data dictionary describes every column (21 in all).
 - **CI:** tests, lint, and the ledger guard on every push; the image build and smoke test on every release.
 
 ## 14. What public data can't tell, and other limits
@@ -172,13 +173,13 @@ Getting it there works like a real release:
 - The forecast doesn't know the starting grid after penalties, safety cars or strategy: it forecasts pace, not position.
 - The decision layer is scored against what the top 10 did, which is not the same as "the best plan".
 - Traffic in the debrief can't tell a fight from a car that was simply close.
-- One person runs the public record: a missed weekend is a gap.
+- One person runs the public record: a missed weekend is a gap. And since October 2026 there is no new data at all, so the record has 0 live weekends.
 
 ## 15. What I'd do next
 
 - **Why one car can't match another:** a car root-cause module comparing two cars' speed traces corner by corner over a season (planned from the start; the architecture keeps a place for it).
 - **The starting grid after penalties** as a forecast input (from the Singapore 2026 debrief).
-- More live weekends: the record only becomes convincing with time.
+- Live weekends again, from a new data source (OpenF1) or an F1TV Access subscription: the public record only becomes convincing with time.
 
 ## 16. How I used AI
 
