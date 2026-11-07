@@ -39,5 +39,5 @@ One file per decision: what was decided, why, the evidence, and the known limits
 | [0014](0014-decision-packet.md) | Tyre and stop decisions, the decision packet | 2026-10-28 | 0008, 0012, 0013 | |
 | [0015](0015-public-record.md) | The public record: frozen before, scored after | 2026-10-29 | 0011 to 0014 | 2026-11-05: paused, no live data |
 | [0016](0016-debrief.md) | The debrief: where our cars' time went | 2026-11-03 | 0003, 0004, 0011, 0015 | |
-| [0017](0017-race-engineer.md) | The race engineer: one model, read-only tools, an exam | 2026-11-04 | 0007, 0011, 0014 to 0016 | |
+| [0017](0017-race-engineer.md) | The race engineer: one model, read-only tools, an exam | 2026-11-04 | 0007, 0011, 0014 to 0016 | 2026-11-08: first full exam |
 | [0018](0018-public-copy.md) | The public copy: what's online and how | 2026-11-04 | 0002, 0015, 0017 | 2026-11-05: Render; 2026-11-08: visitor copy |
