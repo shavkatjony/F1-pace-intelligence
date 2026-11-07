@@ -1,4 +1,4 @@
-# The public copy of the pit wall (step E1, decision 0018): the read-only app and a data
+# The public copy of the pit wall (decision 0018): the read-only app and a data
 # snapshot in one image. Built by .github/workflows/release.yml when a release is published.
 # To try it on the Mac (needs Docker Desktop): make image, then make image-run.
 FROM python:3.12-slim

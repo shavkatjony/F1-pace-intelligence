@@ -1,4 +1,4 @@
-"""Freeze one forecast (step C5): race pace for every car and the tyre and stop decision, made
+"""Freeze one forecast (decision 0015): race pace for every car and the tyre and stop decision, made
 from this weekend's sessions before the target and earlier races only, then written once.
 
 It is the backtest's code, run on one weekend: the shared model for the pace, its errors in the

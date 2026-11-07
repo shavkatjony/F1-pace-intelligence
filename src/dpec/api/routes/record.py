@@ -1,4 +1,4 @@
-"""Addresses for the public record (step C5): the frozen forecasts and scores in ledger/, and
+"""Addresses for the public record (decision 0015): the frozen forecasts and scores in ledger/, and
 the dry runs in reports/dry-runs/ (made after the fact, so never shown as the record).
 Read-only like the rest: it only reads the JSON files.
 """

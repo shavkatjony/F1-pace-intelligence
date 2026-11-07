@@ -1,4 +1,4 @@
-"""The race engineer's tools (step D2): small read-only functions the model can call.
+"""The race engineer's tools (decision 0017): small read-only functions the model can call.
 
 The model never touches the warehouse itself. It asks for a tool by name with arguments,
 run_tool() runs it here and hands back JSON. Every number in an answer has to come from one

@@ -1,4 +1,4 @@
-"""From pace guesses to chances (step C3): replay Sunday's race pace order thousands of times.
+"""From pace guesses to chances (decision 0013): replay Sunday's race pace order thousands of times.
 
 Each replay adds to every driver's guess one error drawn at random from the model's own past
 errors (ranges.past_errors). A driver's chance of the best race pace = the share of replays

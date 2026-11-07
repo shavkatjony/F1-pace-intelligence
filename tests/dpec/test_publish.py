@@ -1,4 +1,4 @@
-"""Public copy tests (step E1): the public settings match the local ones except the mode, the
+"""Public copy tests (decision 0018): the public settings match the local ones except the mode, the
 snapshot holds what the image needs and its checksums catch a changed file."""
 
 import tarfile

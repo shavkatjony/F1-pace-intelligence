@@ -1,4 +1,4 @@
-"""Stop plans (step C4): how many stops, and when the first one.
+"""Stop plans (decision 0014): how many stops, and when the first one.
 
 Simple on purpose: every lap costs deg * tyre age seconds; every stop costs pit_loss seconds.
 No compounds (their pace gaps can't be measured reliably from public data, decision 0014),

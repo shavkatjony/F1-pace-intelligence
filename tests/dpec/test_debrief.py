@@ -1,4 +1,4 @@
-"""Debrief tests (step D1): the lap split adds up to the gap, every grid row gets the right
+"""Debrief tests (decision 0016): the lap split adds up to the gap, every grid row gets the right
 kind, and the race split finds effects that were put in on purpose."""
 
 import numpy as np

@@ -1,4 +1,4 @@
-"""The race engineer's address (step D2): POST /api/chat with {"question": "..."}.
+"""The race engineer's address (decision 0017): POST /api/chat with {"question": "..."}.
 
 The one address that isn't a plain read: it asks a model, which costs money (Claude) or time
 (Ollama). So it only works on the local app; the public copy (mode: public) says no.

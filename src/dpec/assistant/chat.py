@@ -1,4 +1,4 @@
-"""One conversation with a model, the same shape for every provider (step D2).
+"""One conversation with a model, the same shape for every provider (decision 0017).
 
 ask(text) sends the question; answer(outputs) sends tool results back. Both return a Turn:
 the model's text and the tool calls it wants next. Each provider keeps its own history in its

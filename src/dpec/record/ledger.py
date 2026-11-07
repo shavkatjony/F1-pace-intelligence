@@ -1,4 +1,4 @@
-"""The public record (step C5, decision 0015): forecasts frozen before the session, scored after.
+"""The public record (decision 0015): forecasts frozen before the session, scored after.
 
     ledger/2026/19-mexico-city/after_quali.json   frozen before the race, never changed again
     ledger/2026/19-mexico-city/score.json         written after the race, never changed again

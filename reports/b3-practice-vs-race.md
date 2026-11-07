@@ -1,4 +1,4 @@
-# Does practice predict Sunday? (step B3)
+# Does practice predict Sunday? (research for decision 0010)
 
 Date: 2026-10-22 · Data: 2022–2026, 96 dry races, 1,846 driver-weekends
 

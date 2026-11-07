@@ -1,5 +1,5 @@
-"""Forecasting tests (step C1): the answers stay hidden, the future can't leak in, the scores add up.
-They use a small made-up season, so they run in a second and need no warehouse."""
+"""Forecasting tests (decision 0011): the answers stay hidden, the future can't leak in, the
+scores add up. They use a small made-up season, so they run in a second and need no warehouse."""
 
 import numpy as np
 import pandas as pd

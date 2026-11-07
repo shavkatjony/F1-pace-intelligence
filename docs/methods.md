@@ -68,7 +68,7 @@ Three tables needed real modelling choices:
 
 ## 6. Research: what actually predicts race pace?
 
-Before building a model I asked which signals known before the race predict the race (step B3). Over 86 dry weekends, **qualifying pace put the drivers in race order far better than practice long runs** (median Spearman correlation 0.80 against 0.39), and adding long runs on top of qualifying cut the error by only about 2%. That surprised me, because long runs look like "race practice". The reason: practice runs are done on unknown fuel loads and engine modes, so they are noisy; qualifying is everyone flat out at the same time. The forecaster therefore starts from qualifying and team form (decision 0010).
+Before building a model I asked which signals known before the race predict the race (decision 0010). Over 86 dry weekends, **qualifying pace put the drivers in race order far better than practice long runs** (median Spearman correlation 0.80 against 0.39), and adding long runs on top of qualifying cut the error by only about 2%. That surprised me, because long runs look like "race practice". The reason: practice runs are done on unknown fuel loads and engine modes, so they are noisy; qualifying is everyone flat out at the same time. The forecaster therefore starts from qualifying and team form (decision 0010).
 
 ## 7. The forecaster
 

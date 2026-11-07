@@ -3,12 +3,12 @@
 team_name: DPEC
 adopted_team: Mercedes     # decision 0001: the real team whose two cars are "ours"
 seasons: [2022, 2023, 2024, 2025, 2026]
-grid_step_m: 5               # distance grid spacing in metres (step A4)
-slow_lap_pct: 107            # a lap slower than 107% of the session's clean median is 'slow' (step A4)
-fuel_effect_s_per_lap: 0.06  # a lap gets ~0.06 s faster per lap of fuel burnt (step B2, assumption)
-long_run_min_laps: 5         # a practice long run has at least 5 clean laps (step B2)
-long_run_band_pct: 2         # ... each within 2% of the stint's median lap (step B2)
-push_lap_band_pct: 1.5       # a push lap is within 1.5% of the driver's best on that tyre (step B2)
+grid_step_m: 5               # distance grid spacing in metres (decision 0004)
+slow_lap_pct: 107            # a lap slower than 107% of the session's clean median is 'slow' (decision 0003)
+fuel_effect_s_per_lap: 0.06  # a lap gets ~0.06 s faster per lap of fuel burnt (decision 0008, assumption)
+long_run_min_laps: 5         # a practice long run has at least 5 clean laps (decision 0008)
+long_run_band_pct: 2         # ... each within 2% of the stint's median lap (decision 0008)
+push_lap_band_pct: 1.5       # a push lap is within 1.5% of the driver's best on that tyre (decision 0008)
 mode: public                 # read-only online: no race engineer, no telemetry traces
 
 paths:
@@ -21,7 +21,7 @@ paths:
   log: data/ingest_log.csv
   dictionary: docs/data-dictionary.md
 
-assistant:                   # step D2: the race engineer (chat). Only on the local app.
+assistant:                   # decision 0017: the race engineer (chat). Only on the local app.
   provider: claude           # claude (needs ANTHROPIC_API_KEY) or ollama (runs on this Mac)
   claude_model: claude-opus-5-5
   effort: medium             # low, medium or high: how hard Claude thinks before answering

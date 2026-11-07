@@ -19,7 +19,7 @@ class Paths(BaseModel):
 
 
 class Assistant(BaseModel):
-    """The race engineer (step D2). Defaults work without this section in the YAML file."""
+    """The race engineer (decision 0017). Defaults work without this section in the YAML file."""
 
     model_config = ConfigDict(extra="forbid")
 

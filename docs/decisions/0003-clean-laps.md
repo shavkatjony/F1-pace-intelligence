@@ -36,4 +36,4 @@ Grain check: no duplicates.
 
 ## Why SQL files and not dbt (yet)
 Two tables don't need a framework. The files use dbt's {{ }} style,
-so they can move to dbt in step B1 when there are many more tables.
+so they can move to dbt when there are many more tables (decision 0007 looks again).

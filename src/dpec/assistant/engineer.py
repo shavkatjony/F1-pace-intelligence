@@ -1,4 +1,4 @@
-"""The race engineer (step D2, decision 0017): one model, eight read-only tools, strict rules.
+"""The race engineer (decision 0017): one model, eight read-only tools, strict rules.
 
 ask() is the whole loop: send the question, run the tools the model asks for, send their
 results back, and repeat until the model answers in words (or hits the tool call limit).

@@ -1,4 +1,4 @@
-"""Replay every past dry race (step C4): the decision the packet would have made before the
+"""Replay every past dry race (decision 0014): the decision the packet would have made before the
 race, from earlier races and this weekend's practice only, next to what really happened.
 
 Scored the way the GPT team-engineering review asked: tyre wear (error in s/lap), the number
@@ -130,7 +130,7 @@ def replay(
 def decide_next(
     table: pd.DataFrame, stops: pd.DataFrame, today: pd.Series, first_season: int = 2023
 ) -> dict:
-    """The decision for a race that hasn't run yet (step C5). today = its strategy row, with
+    """The decision for a race that hasn't run yet (decision 0015). today = its strategy row, with
     practice filled in and the race columns empty. It learns from every earlier race exactly
     what replay() learns: the wear forecast's errors and the undercut."""
     history = table[table["race_date"] < today["race_date"]]

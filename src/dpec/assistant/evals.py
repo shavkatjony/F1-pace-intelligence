@@ -1,4 +1,4 @@
-"""The race engineer's exam (step D2): 50 questions whose answers the warehouse knows.
+"""The race engineer's exam (decision 0017): 50 questions whose answers the warehouse knows.
 
 Each question's right answer is computed fresh by its checks, so the exam stays right when
 new races arrive. A question passes when every one of its checks passes:

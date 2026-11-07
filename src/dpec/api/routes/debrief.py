@@ -1,4 +1,4 @@
-"""Addresses for Phase D's debrief (step D1): where driver A's time went against driver B.
+"""Addresses for the debrief (decision 0016): where driver A's time went against driver B.
 Computed when asked, from core_laps and the saved telemetry. Read-only like the rest.
 """
 

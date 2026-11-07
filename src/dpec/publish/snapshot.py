@@ -1,4 +1,4 @@
-"""The data snapshot for the public copy (step E1, decision 0018).
+"""The data snapshot for the public copy (decision 0018).
 
 The public app needs the warehouse, the saved forecasts, the public record and the dry runs
 (the 2026 season replayed afterwards), but not the 4 GB of raw files. make_snapshot() puts

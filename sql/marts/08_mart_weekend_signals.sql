@@ -1,5 +1,5 @@
 -- mart_weekend_signals: one row per driver per race weekend. What practice and qualifying said,
--- next to what happened on Sunday. The table for the research question in step B3.
+-- next to what happened on Sunday. The table for the research question in decision 0010.
 -- Key: season + round + driver_code. All pace numbers are % behind the best of that session (0 = best).
 CREATE OR REPLACE TABLE mart_weekend_signals AS
 WITH long_runs AS (

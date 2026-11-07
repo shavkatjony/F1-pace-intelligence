@@ -1,4 +1,4 @@
-"""The decision packet (step C4, decision 0014): one page per race, as it would have looked
+"""The decision packet (decision 0014): one page per race, as it would have looked
 before the race, and under it what really happened.
 
 Every number is computed: the race pace forecast `dpec backtest` saved, the tyre wear and stop

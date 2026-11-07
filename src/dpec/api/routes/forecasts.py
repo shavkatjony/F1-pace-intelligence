@@ -1,4 +1,4 @@
-"""Addresses for Phase C: the forecasts `dpec backtest` saved in data/forecasts/.
+"""Addresses for the forecasts `dpec backtest` saved in data/forecasts/.
 
 Read-only, like the rest of the API. A weekend's forecast is shown exactly as the walk-forward
 test made it before that race: the guess, its 80% range and chances, next to what happened.

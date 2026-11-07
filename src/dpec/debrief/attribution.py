@@ -1,4 +1,4 @@
-"""What a race gap is made of (step D1): two drivers' laps side by side, lap by lap.
+"""What a race gap is made of (decision 0016): two drivers' laps side by side, lap by lap.
 
 Pairing the same lap numbers cancels what both cars share: the fuel burnt so far and the
 track getting faster. What is left is explained by a small regression:

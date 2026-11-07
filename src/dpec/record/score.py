@@ -1,4 +1,4 @@
-"""Score a frozen weekend after the race (step C5): the same measures as the backtest, on the
+"""Score a frozen weekend after the race (decision 0015): the same measures as the backtest, on the
 frozen files exactly as they were. A score is a new file: it never edits a forecast.
 """
 

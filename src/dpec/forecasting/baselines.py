@@ -1,4 +1,4 @@
-"""Four simple guesses (and the 'no signal' floor). The real model of step C2 must beat them,
+"""Four simple guesses (and the 'no signal' floor). The shared model (decision 0012) must beat them,
 or say honestly where it doesn't.
 
 Every forecaster has the same shape: forecaster(history, today) -> one guess per row of today.

@@ -1,5 +1,5 @@
-"""Race engineer tests (step D2): the SQL guard, the tool loop, both providers' message formats
-(against stand-in servers, so no key and no Ollama needed) and the exam's grader."""
+"""Race engineer tests (decision 0017): the SQL guard, the tool loop, both providers' message
+formats (against stand-in servers, so no key and no Ollama needed) and the exam's grader."""
 
 import json
 from collections import Counter

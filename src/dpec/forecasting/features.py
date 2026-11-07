@@ -1,4 +1,4 @@
-"""Inputs for the shared model (step C2), built only from races before each weekend.
+"""Inputs for the shared model (decision 0012), built only from races before each weekend.
 
 team_form: the team's race gap, recent races weighing more. Each race older halves its weight
 every `team_halflife` races (an exponentially weighted mean, pandas `ewm`).

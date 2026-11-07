@@ -1,4 +1,4 @@
-"""The debrief (step D1, decision 0016): after a race, where our cars' time went.
+"""The debrief (decision 0016): after a race, where our cars' time went.
 
 1. Qualifying: each of our drivers' best lap against the fastest lap, split by part of the track.
 2. Race: each one's gap to the best race pace, split into pace, tyres and traffic.

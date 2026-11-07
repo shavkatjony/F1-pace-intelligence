@@ -1,6 +1,7 @@
-"""Where a lap's time went (step D1): the gap between two laps, split by what the car was doing.
+"""Where a lap's time went (decision 0016): the gap between two laps, split by what the car
+was doing.
 
-Both laps sit on one distance grid (step A4b). Each 5 m step of the gap goes to one kind of
+Both laps sit on one distance grid (decision 0004). Each 5 m step of the gap goes to one kind of
 track part, read from the reference lap: braking, a slow, medium or fast corner, traction (the
 exit of a slow or medium corner, before full throttle), or a straight (full throttle). The
 parts add up to the whole gap by construction: they are the gap, cut into pieces.

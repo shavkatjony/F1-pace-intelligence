@@ -1,6 +1,6 @@
 -- mart_race_strategy: one row per race weekend. What practice said about tyre wear, next to
 -- what the race showed: tyre wear, the time a pit stop costs, and how often the top 10 stopped.
--- The table the decision layer (step C4) learns from. Key: season + round.
+-- The table the decision layer (decision 0014) learns from. Key: season + round.
 CREATE OR REPLACE TABLE mart_race_strategy AS
 WITH race_laps AS (
     SELECT * FROM core_laps WHERE session_type = 'R'

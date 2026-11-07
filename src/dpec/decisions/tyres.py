@@ -1,4 +1,4 @@
-"""Tyre wear and pit loss for one race, forecast from practice and earlier races (step C4).
+"""Tyre wear and pit loss for one race, forecast from practice and earlier races (decision 0014).
 
 Tyre wear = seconds a lap gets slower per lap of tyre age (fuel-corrected). Practice runs
 alone overstate it (short runs on a green track), so a small regression learns, from earlier

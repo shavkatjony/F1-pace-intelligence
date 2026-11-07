@@ -1,4 +1,4 @@
-"""Shared model tests (step C2): its inputs only look back, and it learns a clear rule."""
+"""Shared model tests (decision 0012): its inputs only look back, and it learns a clear rule."""
 
 import pandas as pd
 import pytest

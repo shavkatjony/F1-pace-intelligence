@@ -8,7 +8,7 @@ car that day. Made twice per weekend, after practice and after qualifying, with 
 and chances: best race pace, top-3 race pace, beating the teammate.
 
 ## Use it for / not for
-- For: what to expect on Sunday, before the race; the input to the decision packet (step C4).
+- For: what to expect on Sunday, before the race; the input to the decision packet (decision 0014).
 - Not for: wet races (not forecast, decision 0011); finishing positions (starts, safety cars,
   strategy and reliability decide those); one-lap pace; the first races of a new rules era
   without extra care (see limits).

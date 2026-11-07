@@ -1,4 +1,4 @@
-# The race engineer's exam (step D2). 50 questions; each answer is computed from the
+# The race engineer's exam (decision 0017). 50 questions; each answer is computed from the
 # warehouse by its checks (see src/dpec/assistant/evals.py), so it stays right as data grows.
 # kinds: lookup 18, comparison 12, forecast 8, decision 7, trap 5.
 # Run: uv run dpec eval-ai --dry-run   (prints the right answers, no model)

@@ -1,4 +1,4 @@
-"""The shared model (step C2, decision 0012): ONE regression for every track and every year.
+"""The shared model (decision 0012): ONE regression for every track and every year.
 
     race gap = a + b * team_form + c * driver_vs_team                    (after practice)
     race gap = a + b * team_form + c * driver_vs_team + d * quali gap    (after qualifying)

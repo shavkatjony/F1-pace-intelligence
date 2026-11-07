@@ -1,4 +1,4 @@
-"""Decision tests (step C4): the plan maths add up, and the replay never sees the future.
+"""Decision tests (decision 0014): the plan maths add up, and the replay never sees the future.
 They use made-up races, so they run in a second and need no warehouse."""
 
 import numpy as np

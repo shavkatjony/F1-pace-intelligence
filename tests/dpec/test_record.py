@@ -1,4 +1,4 @@
-"""Public record tests (step C5): a frozen file can't change unnoticed, a late forecast is
+"""Public record tests (decision 0015): a frozen file can't change unnoticed, a late forecast is
 refused, the score follows its rules, and a live decision is the replay's decision."""
 
 import json

@@ -1,4 +1,4 @@
-"""Honest ranges (step C3, decision 0013): how far off the model usually is, from its own past.
+"""Honest ranges (decision 0013): how far off the model usually is, from its own past.
 
 80% range = guess +/- the 80th percentile of the size of the model's errors in the previous 10
 forecast weekends (same forecaster, same checkpoint). That is split-conformal prediction, done

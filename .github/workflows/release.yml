@@ -1,6 +1,6 @@
 name: release
 
-# The public copy (step E1, decision 0018). When a release is published on GitHub with a data
+# The public copy (decision 0018). When a release is published on GitHub with a data
 # snapshot attached (dpec-data-<date>.tar.gz from `make snapshot`), this job builds the Docker
 # image, starts it and checks it answers like the public copy should, then pushes it to
 # GitHub's container registry as ghcr.io/<owner>/<repo>:<tag> and :latest.

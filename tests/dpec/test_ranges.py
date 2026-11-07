@@ -1,4 +1,4 @@
-"""Ranges and chances (step C3): honest width, no peeking ahead, chances that add up."""
+"""Ranges and chances (decision 0013): honest width, no peeking ahead, chances that add up."""
 
 import numpy as np
 import pandas as pd

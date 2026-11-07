@@ -1,4 +1,5 @@
-"""Addresses for Phase B's tables. Each one runs one small read-only SQL query.
+"""Addresses for the analysis tables (the marts, decision 0007). Each one runs one small
+read-only SQL query.
 
 A path like /weekends/2024/1/pace?session=Q reads: weekend 2024 round 1, the pace table,
 for qualifying. FastAPI checks the types: a round that isn't a number, or a session that
