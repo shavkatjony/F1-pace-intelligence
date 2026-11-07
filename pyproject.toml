@@ -1,10 +1,10 @@
 [project]
 name = "dpec"
 version = "0.1.0"
-description = "Add your description here"
+description = "Race pace forecasts with honest uncertainty, tyre and pit-stop decisions, a debrief and a graded AI race engineer, on public Formula 1 timing data (2022-2026)."
 readme = "README.md"
 authors = [
-    { name = "shavkatjon", email = "shavkatjon.yuldashev.0411@gmail.com" }
+    { name = "Shavkatjon Yuldashev", email = "shavkatjon.yuldashev.0411@gmail.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -23,6 +23,11 @@ dependencies = [
     "typer>=0.27.3",
     "uvicorn>=0.54.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/shavkatjony/F1-pace-intelligence"
+Demo = "https://f1-pace-intelligence.onrender.com"
+Documentation = "https://github.com/shavkatjony/F1-pace-intelligence/blob/main/docs/methods.md"
 
 [project.scripts]
 dpec = "dpec.cli:app"
