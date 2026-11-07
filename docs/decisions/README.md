@@ -35,7 +35,7 @@ One file per decision: what was decided, why, the evidence, and the known limits
 | [0010](0010-forecast-signals.md) | Qualifying pace as the main signal | 2026-10-24 | 0007, 0008, 0009 | |
 | [0011](0011-target-and-fair-test.md) | What is forecast, and the walk-forward test | 2026-10-27 | 0010 | |
 | [0012](0012-shared-model.md) | One shared model for every track and year | 2026-10-27 | 0010, 0011 | |
-| [0013](0013-ranges-and-chances.md) | 80% ranges and chances from past errors | 2026-10-28 | 0011, 0012 | |
+| [0013](0013-ranges-and-chances.md) | 80% ranges and chances from past errors | 2026-10-28 | 0011, 0012 | 2026-11-08: Brier by years |
 | [0014](0014-decision-packet.md) | Tyre and stop decisions, the decision packet | 2026-10-28 | 0008, 0012, 0013 | |
 | [0015](0015-public-record.md) | The public record: frozen before, scored after | 2026-10-29 | 0011 to 0014 | 2026-11-05: paused, no live data |
 | [0016](0016-debrief.md) | The debrief: where our cars' time went | 2026-11-03 | 0003, 0004, 0011, 0015 | |

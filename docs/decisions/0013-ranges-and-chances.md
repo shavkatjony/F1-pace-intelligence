@@ -2,6 +2,7 @@
 
 Date: 2026-10-28
 Status: accepted
+Updated: 2026-11-08 (the Brier score given for the test years too; no information is 0.131, not 0.132)
 Builds on: [0011](0011-target-and-fair-test.md) target and fair test, [0012](0012-shared-model.md) shared model
 
 ## Decision
@@ -16,7 +17,8 @@ Builds on: [0011](0011-target-and-fair-test.md) target and fair test, [0012](001
 - Window, on the tune years only: 10 weekends is closest to 80% at both checkpoints
   (0.800 / 0.810) and nearly the narrowest. Longer windows forget a rules change more slowly:
   2026 races 1–5 after practice, 68% inside with 10, 61% with all weekends.
-- Top-3 chances: Brier 0.077 after qualifying against 0.132 with no information.
+- Top-3 chances, after qualifying: Brier 0.070 on the test years 2025–26, against 0.129 with no
+  information (0.077 against 0.131 over all forecast years, 2023–26).
 
 ## Known limits
 - The first ~5 races of a new rules era: ranges too narrow (68% inside).
