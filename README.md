@@ -2,7 +2,7 @@
 
 > Before each Formula 1 race, how fast will each car really be, how sure are we, and what should the team do about tyres and pit stops? Then, after the race: were we right, and where did the time go?
 
-**Live, read-only:** https://<my-hf-name soon >-dpec-pit-wall.hf.space · **3-minute video:** <my video link> · **한국어 요약:** [docs/summary-ko.md](docs/summary-ko.md) · **The method, in full:** [docs/methods.md](docs/methods.md)
+**Live, read-only:**  [F1 Pace Intelligence — Live Demo](https://f1-pace-intelligence.onrender.com). · **한국어 요약:** [docs/summary-ko.md](docs/summary-ko.md) · **The method, in full:** [docs/methods.md](docs/methods.md)
 
 DPEC is a solo end-to-end project in data engineering, analytics, machine learning and AI, built on public Formula 1 timing data (2022–2026). It works like a small race-team engineering office for one adopted team (Mercedes's two cars): one trusted data foundation, forecasts made only with what was known at the time, **forecasts frozen in public before each race and scored after it**, a debrief of where the time went, and an AI race engineer that answers from the data or says "not public".
 
@@ -55,22 +55,28 @@ An LLM agent with eight **read-only tools** (a guarded SQL tool, the lap and rac
 
 ## Try it
 
-**Online:** https://<your-hf-name>-dpec-pit-wall.hf.space (read-only; it may take a minute to wake up). Telemetry traces and the race engineer run only on the local app.
+**Online:** https://f1-pace-intelligence.onrender.com (read-only; free hosting, so the first visit can take about a minute to wake up). Telemetry traces and the race engineer run only on the local app.
 
 ![The public copy of the pit wall](docs/images/public-copy.png)
 
-**On your machine** (needs [uv](https://docs.astral.sh/uv/) and Python 3.12):
+**On your machine, in one line** (needs [Docker](https://www.docker.com/)): the same image, with the data inside.
+```bash
+docker run --rm -p 7860:7860 ghcr.io/shavkatjony/f1-pace-intelligence:latest
+```
+Then open http://127.0.0.1:7860. On an Apple Silicon Mac, add `--platform linux/amd64` after `run`.
+
+**The code** (needs [uv](https://docs.astral.sh/uv/) and Python 3.12):
 ```bash
 git clone https://github.com/shavkatjony/F1-pace-intelligence.git
 cd F1-pace-intelligence
 make setup                 # install everything with uv
 make test                  # 127 tests, no internet needed
-make data                  # download, build, check. First run: hours, about 40 GB of FastF1 cache
-uv run dpec backtest       # forecast and score every past dry race
-uv run dpec replay         # replay every past tyre and stop decision
-make run                   # the pit wall app: http://127.0.0.1:8000
 ```
-Settings live in [`config/dpec.yaml`](config/dpec.yaml); nothing is hard-coded.
+Downloading the data from scratch (`make data`) now needs an F1TV Access account: in October 2026 F1 put a login on its timing data, and FastF1 3.9 asks for it. Without one, unpack the data file from the [latest release](https://github.com/shavkatjony/F1-pace-intelligence/releases/latest) in the project folder (`tar -xzf dpec-data-*.tar.gz`) and run `make public`.
+
+With the full data: `uv run dpec backtest` (forecast and score every past dry race), `uv run dpec replay` (every past tyre and stop decision), and `make run` (the pit wall app at http://127.0.0.1:8000). Settings live in [`config/dpec.yaml`](config/dpec.yaml); nothing is hard-coded.
+
+**Check:** on GitHub, the two code boxes show as code, and the release link opens v1.2.
 
 ---
 
@@ -93,7 +99,7 @@ core tables → answer tables (weekends, weather, pace, stints, long runs, track
       ├── debrief/      lap gap by track part, race gap by cause          dpec debrief
       ├── assistant/    8 read-only tools → Claude or Ollama → exam       dpec ask, dpec eval-ai
       ├── api/ + web/   read-only API → pit wall app (linked windows)     make run
-      └── publish/      data snapshot → GitHub release → Docker image → Hugging Face Space
+      └── publish/      data snapshot → GitHub release → Docker image → Render
 ```
 
 | Command | What it does |
@@ -190,7 +196,7 @@ src/dpec/publish/             the data snapshot for the public copy
 ledger/                       forecasts frozen before each race, and their scores (never edited)
 evals/ · reports/ai/          the 50-question exam and every run's results
 docs/                         decisions, model card, data dictionary, method, live weekends log
-Dockerfile · deploy/          the public image and the Hugging Face Space
+Dockerfile · deploy/          the public image (it runs on Render)
 tests/                        unit tests (fake data, no internet)
 ```
 

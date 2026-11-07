@@ -151,13 +151,13 @@ I didn't build a multi-agent router: one engineer with tools is simpler to test,
 
 ## 12. The public copy
 
-The app is online, read-only, at https://<your-hf-name>-dpec-pit-wall.hf.space (decision 0018). Two things stay on my machine: the telemetry traces (they need the 4 GB of raw files) and the race engineer (each question costs money).
+The app is online, read-only, at <https://f1-pace-intelligence.onrender.com> (decision 0018). Two things stay on my machine: the telemetry traces (they need the 4 GB of raw files) and the race engineer (each question costs money).
 
 Getting it there works like a real release:
 1. `dpec snapshot` packs what the public app needs (the warehouse, the saved forecasts and the ledger: about 11 MB) into one file, with a SHA-256 checksum per file and a manifest of the data and the code version.
 2. I attach that file to a **GitHub Release**. Data never goes into git: a binary that changes every weekend would stay in the history forever.
 3. A workflow builds a **Docker image** from the code at the release's tag. The build stops if one checksum doesn't match. It starts the image and checks that it's the public copy (public mode, the page loads, the weekends are there, the chat answers 403) before it publishes anything.
-4. A free **Hugging Face Space** runs that image. It sleeps after two days without visitors and wakes on the next visit.
+4. A free **Hugging Face Space** runs that image. It sleeps after two days without visitors…` | `A free **Render** web service runs that image. It sleeps after 15 minutes without visitors and wakes in about a minute.
 
 ## 13. Engineering
 
