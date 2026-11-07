@@ -5,3 +5,4 @@
 | run | all | lookup | comparison | forecast | decision | trap | looked it up | median s | tokens | cost $ |
 |---|---|---|---|---|---|---|---|---|---|---|
 | claude-claude-opus-5-5-2026-11-03 | 100% | 100% | 100% | nan% | nan% | 100% | 100% | 7 | 18,428 | 0.06 |
+| claude-claude-opus-5-5-2026-11-08 | 100% | 100% | 100% | 100% | 100% | 100% | 100% | 7 | 667,412 | 1.53 |

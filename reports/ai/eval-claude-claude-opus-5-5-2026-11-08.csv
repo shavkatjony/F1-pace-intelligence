@@ -1,0 +1,215 @@
+id,kind,passed,misses,answer,tools,failed_calls,tokens_in,tokens_out,cached_in,seconds,provider,model
+L01,lookup,True,,VER won the 2024 Bahrain Grand Prix (round 1) for Red Bull Racing [sql]. He also started from pole [sql].,tables sql,0,10970,177,6468,7.5,claude,claude-opus-5-5
+L02,lookup,True,,"VER (Red Bull Racing) took pole at the 2023 Monaco Grand Prix (round 6), with a Q3 lap of 71.365 s [sql].",tables sql,0,11095,276,6499,4.4,claude,claude-opus-5-5
+L03,lookup,True,,"The 2022 Italian Grand Prix at Monza (round 16) had **53 race laps** [sql], and 8 of them were run behind the safety car [sql].",tables sql,0,11012,229,6478,4.0,claude,claude-opus-5-5
+L04,lookup,True,,"None. The 2024 Singapore Grand Prix (round 18, 62 laps) ran 0 laps behind the safety car and 0 behind the virtual safety car [sql]. I checked this two ways: the weekend summary table says 0, and none of the race's 1,177 individual laps are marked as safety car or VSC laps [sql].",tables sql sql,0,15768,443,11004,7.8,claude,claude-opus-5-5
+L05,lookup,True,,"Track temperature averaged **43.8 °C** during qualifying at the 2023 Hungarian Grand Prix (round 11, session 2023_11_Q) [sql]. Over the session it ranged from 41.9 °C to 45.7 °C [sql]. Air temperature was 26.3 °C and no rain fell [sql].",tables sql sql,1,15941,476,11050,7.6,claude,claude-opus-5-5
+L06,lookup,True,,"**3 of the 24 races in 2024 were wet [sql]:**
+
+| Round | Race | Share of laps on wet-weather tyres |
+|---|---|---|
+| 9 | Canadian GP | 0.665 [sql] |
+| 12 British GP | 0.244 [sql] |
+| 21 | São Paulo GP | 1.0 [sql] |
+
+The count uses the warehouse's `is_wet_race` flag. I didn't check the cut-off it uses, so a race with only a little rain could be left out.",tables sql,0,11037,406,6458,6.1,claude,claude-opus-5-5
+L07,lookup,True,,VER's best clean lap in qualifying at the 2024 Bahrain Grand Prix was **89.179 s** [sql]. That is his fastest of 5 clean laps in that session (2024_01_Q) [sql].,tables sql,0,11017,212,6506,5.3,claude,claude-opus-5-5
+L08,lookup,True,,"HAM finished 2023 with **234 points** [sql]. That put him **3rd** in the championship, with **0 wins** [sql]. These are his standings after round 22, the last round the warehouse holds for 2023 [sql].",tables sql,0,10953,249,6466,6.4,claude,claude-opus-5-5
+L09,lookup,True,,"After round 10 of 2025, PIA (McLaren) led the drivers' championship with 198 points and 5 wins [sql]. NOR was second on 176 points, 22 behind, with 2 wins [sql]. VER was third on 155 points with 2 wins [sql].",tables sql,0,11077,243,6468,5.4,claude,claude-opus-5-5
+L10,lookup,True,,"**24 different drivers** started at least one race in 2024 [sql]. This number comes from the driver table's ""started a race"" flag. A separate count of distinct drivers in the race results for all 24 rounds also gives 24 [sql]. The driver table lists 33 drivers for 2024 in total [sql], so 9 of them took part in sessions such as practice but never started a race.",tables sql,0,11110,422,6460,5.9,claude,claude-opus-5-5
+L11,lookup,True,,"LEC had **50 clean laps** in the 2024 Italian Grand Prix race (round 16, session 2024_16_R) [sql]. The pace summary table and a direct count of laps marked clean both give 50 [sql].",tables sql sql,1,15957,535,11071,6.8,claude,claude-opus-5-5
+L12,lookup,True,,"A green-flag pit stop at the 2024 British Grand Prix (Silverstone, round 12) cost **37.7 s** [sql]. That figure is the median of 45 green-flag stops, meaning no safety car, VSC or red flag on the in-lap or out-lap [sql]. Each stop's cost is its in-lap plus out-lap, minus two normal laps.
+
+**Caveat:** the race is marked as wet [sql], so many of those stops were switches between wet and dry tyres while the track conditions changed. That probably makes the figure higher than a normal dry-race pit loss at Silverstone, so be careful using it for dry strategy.",tables sql tables,0,16340,519,11002,8.0,claude,claude-opus-5-5
+L13,lookup,True,,"The top 10 typically made **2 pit stops** at the 2023 Spanish Grand Prix (Round 7, Catalunya) [sql].
+
+- That figure is the `top10_stops` value in the strategy table, which most likely means the typical (median) count for the top 10, not the count for every one of them.
+- The 66-lap race had 0 safety car and 0 VSC laps [sql], so no caution periods made stopping cheaper and changed the plan.
+- The whole field made 43 pit stops under green flag [sql].
+
+I can give each top-10 driver's own stop count if you need it.",tables sql sql,1,15935,607,11087,7.9,claude,claude-opus-5-5
+L14,lookup,True,,"The highest track temperature in the 2025 Abu Dhabi Grand Prix race (2025_24_R) was 34.6 °C [sql]. The lowest was 28.7 °C and the session average was 31.0 °C [sql], from 154 weather readings [sql].",tables sql sql,1,15877,464,11037,7.9,claude,claude-opus-5-5
+L15,lookup,True,,"The warehouse has **110 sessions** from 2022, covering 22 race weekends [sql].
+
+| Session | Count |
+|---|---|
+| FP1 | 22 |
+| FP2 | 22 |
+| FP3 | 19 |
+| Q | 22 |
+| R | 22 |
+| S (Sprint) | 3 |
+
+All counts are from [sql]. FP3 is missing at three weekends and there are three Sprints, so those were probably the 2022 sprint weekends. Across all seasons the warehouse holds 545 sessions [data_status].",data_status tables sql,0,13636,381,8877,6.3,claude,claude-opus-5-5
+L16,lookup,True,,"The top speed trap reading in qualifying at the 2024 Italian Grand Prix (round 16) was **353.0 kph**, and two drivers share it: **ALO** (Aston Martin) on lap 10 and **RIC** (RB) on lap 11 [sql]. Just behind them, BOT (Kick Sauber) and GAS (Alpine) both reached 352.0 kph [sql]. The data only records the speed trap in whole kph, so it can't tell ALO and RIC apart. It also doesn't show whether either of them was in another car's slipstream on those laps.",tables sql sql,1,16295,671,11118,9.5,claude,claude-opus-5-5
+L17,lookup,True,,"PIA (Oscar Piastri, McLaren) finished third (P3 [sql]) at the 2025 Japanese Grand Prix, which was round 3 [sql]. VER won (P1 [sql]) and NOR was second (P2 [sql]).",tables sql sql,1,16047,488,11066,6.7,claude,claude-opus-5-5
+L18,lookup,True,,"In FP2 at the 2024 Bahrain Grand Prix (round 1), lap times dropped by about **0.200 s every 10 minutes** (evo_s_per_10min = -0.2) [sql]. The table flags this figure as reliable. It comes from 65 laps by 19 drivers [sql]. Track temperature only moved between 21.1 and 23.4 °C, and there was no rain [sql], so the session conditions were steady.",tables sql sql,1,15929,488,11052,8.8,claude,claude-opus-5-5
+C01,comparison,True,,"LEC had the faster best clean lap in 2024 Bahrain qualifying (round 1), by **0.014 s** over VER [lap_split].
+
+Where VER lost and gained time against LEC [lap_split]:
+
+| Section | VER vs LEC (s) |
+|---|---|
+| Braking | +0.122 (VER's biggest loss) |
+| Traction | +0.070 |
+| Medium corners | +0.051 |
+| Fast corners | -0.005 |
+| Straights | -0.103 |
+| Slow corners | -0.121 |
+
+This tool only compares each driver's best clean lap, so the gap may not match the official qualifying result.",lap_split,0,4866,474,2182,6.1,claude,claude-opus-5-5
+C02,comparison,True,,"VER had the best race pace at the 2023 Italian GP (Round 14). He set the reference pace, 0.00%, over 48 clean laps and won the race [sql].
+
+| Driver | Team | Race pace gap | Clean laps | Finish |
+|---|---|---|---|---|
+| VER | Red Bull | 0.00% | 48 | P1 |
+| SAI | Ferrari | +0.24% | 47 | P3 |
+| PER | Red Bull | +0.36% | 45 | P2 |
+| RUS | Mercedes | +0.45% | 47 | P5 |
+| LEC | Ferrari | +0.50% | 47 | P4 |
+
+All values are from [sql]. RUS had the best pace of our two cars, in 4th, 0.45% behind VER [sql].",tables sql sql,1,16280,730,11104,8.6,claude,claude-opus-5-5
+C03,comparison,True,,"They were 0.12 percentage points apart, with HAM ahead. HAM was +0.03% behind the best race pace (35 clean laps) and RUS was +0.15% (22 clean laps) [sql]. On the laps they both ran, HAM was 0.120 s/lap quicker on average [race_gap]. On equal tyres in clean air the gap was 0.130 s/lap (80% range 0.325 quicker to 0.055 slower), so it isn't clear-cut [race_gap].
+
+Treat this with caution: it was a wet race, and RUS finished 19th, so only 22 of his laps could be compared [sql]. There's no pre-race forecast to check against, because wet races aren't forecast [forecast].",race_gap forecast tables sql sql,2,21414,1030,15674,13.5,claude,claude-opus-5-5
+C04,comparison,True,,"**RUS qualified ahead of ANT**: he was classified 14th in Monaco qualifying (round 8) and ANT was 15th [sql].
+
+| Driver | Quali position | Q1 | Q2 | Q3 |
+|---|---|---|---|---|
+| RUS | 14 [sql] | 71.507 [sql] | — | — |
+| ANT | 15 [sql] | 71.880 [sql] | — | — |
+
+RUS's Q1 lap was 0.373 s faster [sql]. RUS has no Q2 time, but being classified 14th means he still took part in Q2. The data doesn't say why he set no time there. The grid position field is empty for both cars, so I can't confirm where they actually started.",tables sql sql,1,16086,737,11116,8.9,claude,claude-opus-5-5
+C05,comparison,True,,"LEC lost the most time to VER **on the straights: 0.103 s** [lap_split]. That's out of about 3,837 m of straight, roughly 71% of the lap [lap_split].
+
+| Section | LEC vs VER (s, + = LEC slower) |
+|---|---|
+| Straight | +0.103 |
+| Slow corner | +0.093 |
+| Fast corner | +0.012 |
+| Traction | −0.044 |
+| Medium corner | −0.057 |
+| Braking | −0.122 |
+
+All figures are from [lap_split].
+
+Slow corners were nearly as costly: 0.093 s lost in only about 110 m [lap_split]. That makes them by far the worst area for each metre of track.
+
+Overall, LEC's best clean lap was actually 0.014 s quicker than VER's [lap_split]. He made up the losses mainly under braking.",lap_split,0,4866,579,2181,7.1,claude,claude-opus-5-5
+C06,comparison,True,,"About **0.240 s per lap** of PER's **0.45 s/lap** average gap to VER came from pace on equal tyres in clean air (80% range -0.178 to +0.549) [race_gap]. That is a little over half the gap, but the range includes zero, so we can't be sure PER was actually slower on equal terms.
+
+The rest of the gap came from:
+- **Older tyres:** +0.130 s/lap (80% range +0.010 to +0.315) [race_gap]. This is the biggest part after pace.
+- **PER's traffic:** +0.070 s/lap (80% range +0.004 to +0.172) [race_gap]. He spent 19.6% of laps in traffic [race_gap].
+- **Harder tyres:** +0.012 s/lap (80% range -0.083 to +0.115) [race_gap].
+
+This is based on 46 compared laps [race_gap]. The split shows links in the data, not proven causes.",race_gap,0,4886,488,2183,6.7,claude,claude-opus-5-5
+C07,comparison,True,,"LEC had the lowest wear figure: **−0.350 s/lap** on Softs in FP3 at round 10 [sql]. That run was only 5 laps long, though, and a negative number means his laps got faster, not that the tyres wore less. That is probably track evolution or lap-to-lap noise, so I wouldn't treat it as a real wear result.
+
+| Driver | Session | Tyre | Laps | Wear (s/lap) |
+|---|---|---|---|---|
+| LEC | FP3 | Soft | 5 | −0.350 [sql] |
+| MAG | FP1 | Medium | 5 | −0.060 [sql] |
+| VER | FP3 | Medium | 9 | −0.031 [sql] |
+| ALB | FP1 | Medium | 7 | 0.051 [sql] |
+| NOR | FP2 | Soft | 13 | 0.058 [sql] |
+
+If you only count runs of about 9 laps or more, VER's 9-lap Medium run (−0.031) and NOR's 13-lap Soft run (0.058) are the more reliable low-wear results [sql].",tables sql sql,1,16495,901,11098,10.2,claude,claude-opus-5-5
+C08,comparison,True,,"VER finished 2024 with 63 more points than NOR: 437 against 374 after round 24, the last round [sql]. VER was 1st in the championship and NOR was 2nd [sql].",tables sql,0,11021,217,6474,4.1,claude,claude-opus-5-5
+C09,comparison,True,,"VER gained the most places at the 2024 São Paulo GP (round 21): he started 17th and won, so he gained 16 places [sql]. GAS was next, from 13th to 3rd, a gain of 10 [sql]. For our cars, HAM went from 14th to 10th, a gain of 4 [sql]. That ties him with ZHO (19th to 15th) and SAI (20th to 16th, though SAI's result is listed as ""Retired"") [sql].",tables sql sql,1,16241,587,11066,8.8,claude,claude-opus-5-5
+C10,comparison,True,,"The average track temperature in qualifying was **12.8 °C lower** than in FP1 at the 2024 Bahrain GP (round 1).
+
+| Session | Avg track temp |
+|---|---|
+| FP1 | 34.3 °C [sql] |
+| Q | 21.5 °C [sql] |
+
+FP1 was held in daytime heat and qualifying under lights, so FP1 says little about qualifying conditions. FP2 at 22.0 °C [sql] was much closer to qualifying.",tables sql sql,1,16116,523,11058,6.7,claude,claude-opus-5-5
+C11,comparison,True,,"NOR (McLaren) scored the most points in 2025, finishing with 423 points [sql]. That was just 2 more than VER, who had 421 points and the most wins with 8 [sql]. PIA came third with 410 points [sql]. Our best driver was RUS in fourth with 319 points and 2 wins [sql]. These are the standings after round 24, the last round saved for 2025 [sql].
+
+| Pos | Driver | Team | Points | Wins |
+|---|---|---|---|---|
+| 1 | NOR | McLaren | 423 | 7 |
+| 2 | VER | Red Bull Racing | 421 | 8 |
+| 3 | PIA | McLaren | 410 | 7 |
+| 4 | RUS | Mercedes | 319 | 2 |
+| 5 | LEC | Ferrari | 242 | 0 |",tables sql,0,11232,447,6462,6.0,claude,claude-opus-5-5
+C12,comparison,True,,"Mercedes won **2** races in 2025, and George Russell (RUS) won both [sql]:
+
+| Round | Event | Winner |
+|---|---|---|
+| 10 | Canadian Grand Prix | RUS [sql] |
+| 18 | Singapore Grand Prix | RUS [sql] |
+
+That count covers the full season: the warehouse has a winner saved for all 24 rounds [sql].",tables sql sql,0,11178,381,6464,6.4,claude,claude-opus-5-5
+F01,forecast,True,,"After qualifying, the model forecast RUS at +0.52% behind the best race pace (80% range -0.38 to +1.43) at the 2025 Singapore GP (Round 18) [forecast]. That put him 4th, behind NOR (+0.37%), PIA (+0.38%) and VER (+0.43%) [forecast]. It gave him a 15% chance of the best race pace, a 43% chance of top 3 and a 65% chance of beating ANT [forecast]. His actual gap was +0.05%, at the fast end of the range and much better than forecast [forecast].",tables sql forecast,0,17696,471,11101,6.9,claude,claude-opus-5-5
+F02,forecast,True,,"For HAM at the 2025 Italian Grand Prix (round 16 [sql]), the after-qualifying forecast had him **+1.06% behind the best race pace (80% range +0.18 to +1.93)** [forecast].
+
+He actually finished **+0.67%** off the best race pace, which is inside that range [forecast]. In 2025 HAM drives for Ferrari, not for us. For comparison, our cars were forecast at RUS +0.96% (80% range +0.09 to +1.83) and ANT +1.19% (80% range +0.32 to +2.06) [forecast].",tables sql forecast,0,17527,460,11072,6.6,claude,claude-opus-5-5
+F03,forecast,True,,"The model gave **VER** the best chance of the best race pace at the 2024 Japanese Grand Prix (round 4 [sql]): 34.25% [forecast]. His predicted gap was +0.29% (80% range -0.49 to +1.07) [forecast].
+
+| Driver | Chance of best race pace | Predicted gap (80% range) | Actual gap |
+|---|---|---|---|
+| VER | 34.25% [forecast] | +0.29% (-0.49 to +1.07) [forecast] | +0.05% [forecast] |
+| PER | 26.82% [forecast] | +0.40% (-0.38 to +1.18) [forecast] | +0.22% [forecast] |
+| NOR | 10.75% [forecast] | +0.66% (-0.13 to +1.44) [forecast] | 0.00% (best) [forecast] |
+| HAM (ours) | 2.65% [forecast] | +0.98% (+0.20 to +1.76) [forecast] | +0.36% [forecast] |
+| RUS (ours) | 2.58% [forecast] | +1.03% (+0.25 to +1.81) [forecast] | +0.38% [forecast] |
+
+NOR actually had the best race pace, not VER, but VER was only +0.05% behind, well inside his range [forecast]. Both our cars beat their forecasts by about 0.6 points [forecast].",tables sql forecast,0,17498,795,11168,9.2,claude,claude-opus-5-5
+F04,forecast,True,,"At the 2025 Italian Grand Prix (round 16), ANT's actual race pace was **+0.71%** behind the best race pace [sql].
+
+That figure comes from 46 clean race laps [sql], and he finished P9 [sql].",tables sql sql,1,16145,571,11205,7.3,claude,claude-opus-5-5
+F05,forecast,True,,"In 2025, the shared model's average forecast error after qualifying was **0.52%** (mean absolute error 0.5168 percentage points) [sql]. That's across 401 driver-weekend forecasts that have a known race result [sql]. Errors are measured in % behind the best race pace.
+
+It was the most accurate of the six forecasters. Next were per_year_model at 0.58% (0.5763) and signal_as_is at 0.58% (0.5774) [sql]. Its average signed error was −0.02% (−0.024) [sql], so it barely leaned either way.",tables sql,0,11249,390,6503,5.9,claude,claude-opus-5-5
+F06,forecast,True,,"**None.** Team DPEC hasn't frozen any weekends in its public record yet; the ledger is empty and says ""nothing frozen yet"" [public_record].",public_record,0,4371,89,2155,3.1,claude,claude-opus-5-5
+F07,forecast,True,,"The shared model had the lower average error for 2025 after practice: **0.57%** against **0.60%** for team form [sql]. Both were scored on the same 401 driver forecasts across 21 rounds, so the shared model was about 0.03 percentage points closer on average [sql]. The error here is the average gap between the predicted and actual race pace, measured as % behind the best race pace. For context, the other forecasters did worse: last race 0.71%, per-year model 0.80%, no signal 0.80% and signal as-is 1.09% [sql].",tables sql,0,11263,394,6513,6.6,claude,claude-opus-5-5
+F08,forecast,True,,"After qualifying, the model gave LEC a **55.4%** chance of beating SAI on race pace [forecast]. The 2024 Italian Grand Prix was round 16 [sql].
+
+| Driver | Predicted gap to best race pace (80% range) | Actual |
+|---|---|---|
+| LEC | +0.31% (−0.30 to +0.91) [forecast] | +0.30% [forecast] |
+| SAI | +0.39% (−0.22 to +0.99) [forecast] | +0.54% [forecast] |
+
+The two ranges overlap almost completely, so the model only slightly favoured LEC. He did beat SAI on race pace in the race. This forecast is a walk-forward backtest built only from earlier races, not a call made live that weekend [forecast].",forecast sql sql sql tables sql,1,43408,891,35455,12.1,claude,claude-opus-5-5
+D01,decision,True,,"The call was **1 stop** for the 2024 Bahrain GP (Round 1, Sakhir) [tyre_decision]. It was rated a clear call, with a 0.739 chance that one stop was the best strategy and a first-stop window of laps 20–27 [tyre_decision]. The predicted wear was 0.0734 s/lap (80% range 0.0159 to 0.1308) [tyre_decision].
+
+It turned out wrong. Actual wear was 0.0995 s/lap, the race ran **2 stops**, and no first stops came inside the window [tyre_decision].
+
+This is a replay built only from earlier races, so it is not a call that was frozen live before that weekend [tyre_decision].",tyre_decision,0,4640,361,2164,4.7,claude,claude-opus-5-5
+D02,decision,True,,"According to the replay, the top 10 at the 2024 Bahrain GP (round 1) made **2 stops** [tyre_decision]. The race strategy table gives the same count [sql].
+
+The replay got this wrong:
+
+| | Replay forecast | What happened |
+|---|---|---|
+| Stops | 1 (marked as a clear call, 0.739 chance of being the best plan) | 2 |
+| Tyre wear | 0.073 s/lap (80% range 0.016 to 0.131) | 0.100 s/lap |
+| First stop window | Laps 20–27 | Missed (inside_window = 0) |
+
+All values come from [tyre_decision]. The actual wear was within the forecast range but higher than the middle estimate, and the field ended up stopping twice.",tables tyre_decision sql,0,16086,620,11213,8.9,claude,claude-opus-5-5
+D03,decision,True,,"For the 2025 Hungarian GP (round 14), our tyre call forecast **0.068 s/lap of wear (80% range 0.037 to 0.099)** [tyre_decision]. In the race, actual wear came in at 0.058 s/lap, inside that range [tyre_decision]. The call was 2 stops, with a first-stop window of laps 15–23, but it was marked not clear (p_best 0.642) [tyre_decision]. The race was actually won on 1 stop [tyre_decision]. This forecast is a replay built only from races before Hungary, not the call made live on the day [tyre_decision].",tables sql tyre_decision,0,15897,484,11080,7.9,claude,claude-opus-5-5
+D04,decision,True,,"For the 2024 Italian Grand Prix at Monza (round 16), the first-stop window ran from **lap 18 to lap 25** [sql].
+
+The decision was a 1-stop race [sql], and the call was rated clear [sql]. The first stops in the actual race came inside that window [sql].",tables sql sql,1,16078,521,11194,7.2,claude,claude-opus-5-5
+D05,decision,True,,"For the 2023 Spanish Grand Prix (round 7, Catalunya, 66 laps), our tyre decision gave about **30.6 laps of useful tyre life** [tyre_decision].
+
+- **Wear forecast:** 0.050 s/lap (80% range 0.000 to 0.161) [tyre_decision]. Once the race was run, actual wear came out at 0.075 s/lap [tyre_decision].
+- **The call:** 1 stop, with a first stop window of laps 29 to 37 [tyre_decision]. It wasn't a clear call: the chance that 1 stop was best was only 0.61 [tyre_decision].
+- **What happened:** The race went 2 stops, and the tool counted 0 first stops under green inside our window [tyre_decision].
+
+This figure comes from a replay built only from races before this one, not from a forecast frozen live that weekend [tyre_decision].",tyre_decision,0,4731,519,2166,6.1,claude,claude-opus-5-5
+D06,decision,True,,"Our replayed stop call matched the top 10's number of stops in **45 of 78 replayed dry races, or 57.7%** [sql].
+
+- In the `decisions` table, `actual_stops` equals `top10_stops` from `mart_race_strategy` in all 78 races, so these two count the same thing [sql].
+- When the call was marked **clear**, it matched in 34 of 51 races (66.7%) [sql].
+- When the call was **not clear**, it matched in only 11 of 27 races (40.7%) [sql].
+
+Only dry races are replayed, so wet races aren't counted here.",tables tables sql sql,1,21594,1107,16112,14.1,claude,claude-opus-5-5
+D07,decision,True,,"The tyre and stop decision for the 2025 Italian Grand Prix (Monza, round 16) used a pit loss of **25.72 s** [sql]. For comparison, the pit loss measured in the race itself was 24.71 s [sql]. So the decision assumed each stop would cost about 1 s more than it actually did.",tables sql sql,1,16057,596,11182,10.1,claude,claude-opus-5-5
+T01,trap,True,,"Not public: teams don't publish fuel loads, and the timing and telemetry data we have doesn't record them, so I can't give or estimate HAM's starting fuel for the 2024 Monaco Grand Prix. If it helps, I can pull his race pace or stint data from that race.",,0,2164,111,0,2.3,claude,claude-opus-5-5
+T02,trap,True,,"That's not public. Teams don't publish ERS deployment modes or battery use, and the public timing and telemetry feeds don't include them, so I can't tell you or estimate what VER used on that last lap.",,0,2177,91,0,1.8,claude,claude-opus-5-5
+T03,trap,True,,"That's not public. Teams don't publish tyre pressures, and the public timing and telemetry feeds don't include them, so there's nothing I can pull for LEC in qualifying at Monza 2024. I can show his lap times or a lap_split telemetry comparison against another driver from that session instead.",,0,2170,115,0,2.6,claude,claude-opus-5-5
+T04,trap,True,,"That's **not public**. Teams don't publish wing levels or any other setup details, and nothing in the timing or telemetry data records them, so I won't guess. If it helps, I can pull our straight-line and fast-corner splits against a rival for the 2025 Italian GP with `lap_split`. That shows the effect of the setup, though not the wing level itself.",,0,2166,141,0,2.6,claude,claude-opus-5-5
+T05,trap,True,,"I can't give you RUS's race pace gap for the 2027 Bahrain Grand Prix. The warehouse only holds the 2022 to 2026 seasons, and the latest saved event is the 2026 Singapore Grand Prix [data_status]. No 2027 forecast exists to quote with an 80% range. I could pull RUS's forecast and actual gap from a past Bahrain race or from a recent 2026 round.",data_status,0,4499,212,2163,3.4,claude,claude-opus-5-5
