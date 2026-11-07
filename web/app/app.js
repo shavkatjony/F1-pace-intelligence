@@ -1,4 +1,4 @@
-// Team DPEC pit wall: linked windows on real data from the read-only API (src/dpec/api).
+// Team DPEC pit wall: linked windows on recorded F1 data from the read-only API (src/dpec/api).
 // Same look and window system as web/prototype/, but every number comes from the warehouse.
 // Each window type below has: key(c) = which data it needs for context c, load(c) = fetch it,
 // render(i, data, c) = draw it. The shared context c is the weekend, session and two drivers.
@@ -598,8 +598,15 @@ async function start() {
   if (!WEEKENDS.length) { $("#ws").innerHTML = PUBLIC ? `<div class="empty" style="grid-column:1/-1"><p>This copy has no race weekends in it.</p></div>` : `<div class="err" style="grid-column:1/-1">The warehouse has no weekends yet.<small>Run "make data" first.</small></div>`; return }
   $("#oursNote").textContent = PUBLIC ? `${SETTINGS.adopted_team}: their two cars carry ★ OURS in every window.` : `${SETTINGS.adopted_team} (adopted_team in config/dpec.yaml). Their cars carry ★ OURS.`;
   get("/health").then(hl => {
-    $("#modeNote").textContent = `${PUBLIC ? "public copy" : "local"} · ${hl.sessions} sessions · data up to ${hl.latest_event} ${hl.latest}`;
-    if (PUBLIC) $("#footNote").textContent = "Public read-only copy. Telemetry traces need 4 GB of raw car data, and each live race-engineer question costs money, so both run on the local app; here the engineer shows recorded answers." }).catch(() => { });
+    // The data is a fixed snapshot, never a live feed: say how fresh it is, with real dates.
+    const day = d => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    const upTo = `the ${hl.latest} ${hl.latest_event}${hl.latest_date ? ` (${day(hl.latest_date)})` : ""}`;
+    $("#modeNote").textContent = `${PUBLIC ? "public copy" : "local"} · ${hl.sessions} sessions · data up to ${upTo}`;
+    $("#footSnap").textContent = hl.snapshot ? `Snapshot · ${day(hl.snapshot.made)}` : PUBLIC ? "Recorded data" : "Local data";
+    $("#footNote").textContent = PUBLIC
+      ? `Recorded F1 timing data up to ${upTo}. Not a live feed: it changes only when a new snapshot is released.`
+      : `Recorded F1 timing data up to ${upTo}, from your warehouse. Read-only.`;
+    if (PUBLIC) $("#footTip").textContent = "Telemetry traces and live race-engineer questions run on the local app; here the engineer shows its recorded exam answers." }).catch(() => { });
   const wish = wishFrom(st.ctx);
   const first = WEEKENDS.find(w => w.season === wish.season && w.round === wish.round) || WEEKENDS[0];
   try { Object.assign(st.ctx, await resolve(first.season, first.round, wish)) } catch (e) { toast(PUBLIC ? "That weekend couldn't load. Try another one." : e.message) }

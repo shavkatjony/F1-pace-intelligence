@@ -251,7 +251,7 @@ body.solo .ws{grid-auto-rows:calc((100vh - 70px)/5)}
 .picture p{margin:0}
 .picture img{width:100%;max-height:100%;object-fit:contain;border:1px solid var(--line);border-radius:4px;background:#fff}
 .sugg button[aria-pressed="true"]{background:var(--plum);color:var(--panel);border-style:solid}
-.live{font:700 12px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;background:var(--teal);color:var(--panel);padding:5px 8px;border-radius:4px}
+.snap{font:700 12px/1 var(--f-label);letter-spacing:.14em;text-transform:uppercase;border:1.5px solid var(--muted);color:var(--ink);padding:4px 8px;border-radius:4px}
 .tt td.dim{color:var(--muted)}
 
 /* Debrief window: small headings over each half */

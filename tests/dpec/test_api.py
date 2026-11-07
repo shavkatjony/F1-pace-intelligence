@@ -1,5 +1,6 @@
 """API tests: the fake weekend from test_warehouse, built into a warehouse, served by the app."""
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -76,6 +77,27 @@ def test_health_counts_sessions(client):
     r = client.get("/api/health")
     assert r.status_code == 200
     assert r.json()["sessions"] == 2
+
+
+def test_health_says_how_fresh_the_data_is(client, tmp_path, monkeypatch):
+    (tmp_path / "local").mkdir()
+    monkeypatch.chdir(tmp_path / "local")  # a folder with no snapshot in it, like the local app
+    h = client.get("/api/health").json()
+    assert h["latest_date"] == "2024-03-02"  # the last session in the warehouse
+    assert h["snapshot"] is None
+    monkeypatch.chdir(tmp_path)  # the public image runs next to the unpacked snapshot
+    manifest = {
+        "made_utc": "2026-11-08T09:30:00+00:00",
+        "code_version": "abc1234",
+        "data_up_to": "Test Grand Prix 2024",
+        "files": {},
+    }
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    assert client.get("/api/health").json()["snapshot"] == {
+        "made": "2026-11-08",
+        "code_version": "abc1234",
+        "data_up_to": "Test Grand Prix 2024",
+    }
 
 
 def test_weekend_lists_its_sessions_in_time_order(client):

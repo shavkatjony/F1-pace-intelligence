@@ -37,6 +37,7 @@ jobs:
           docker run -d -p 7860:7860 --name app dpec-public
           for i in $(seq 1 30); do curl -sf localhost:7860/api/health && break; sleep 2; done
           curl -sf localhost:7860/api/health | grep -q '"mode":"public"'
+          curl -sf localhost:7860/api/health | grep -q '"snapshot":{"made"'
           curl -sf localhost:7860/ | grep -q '<title>'
           curl -sf localhost:7860/api/weekends | grep -q '"winner"'
           curl -sf localhost:7860/api/chat/recorded | grep -q '"answers":\[{'

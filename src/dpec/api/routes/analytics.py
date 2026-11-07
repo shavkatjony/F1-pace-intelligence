@@ -7,6 +7,7 @@ isn't one of SESSIONS, gets a 422 error before any SQL runs.
 """
 
 import json
+from pathlib import Path
 from typing import Literal
 
 import duckdb
@@ -18,6 +19,7 @@ from telemetry_core.warehouse import query
 router = APIRouter()
 LOCAL_ONLY = "telemetry traces are only on the local app (the raw files are 4 GB)"
 Session = Literal["FP1", "FP2", "FP3", "SQ", "S", "Q", "R"]
+MANIFEST = Path("manifest.json")  # in the public image, the data snapshot unpacks next to the app
 
 
 def rows(request: Request, sql: str, params: list | None = None) -> list[dict]:
@@ -30,19 +32,40 @@ def session_key(season: int, round_no: int, session: str) -> str:
     return f"{season}_{round_no:02d}_{session}"  # the same key core_sessions uses
 
 
+def snapshot_info(manifest: Path = MANIFEST) -> dict | None:
+    """When the public copy's data snapshot was packed, and from which commit. None on the
+    local app, which reads the warehouse directly."""
+    if not manifest.exists():
+        return None
+    m = json.loads(manifest.read_text(encoding="utf-8"))
+    return {
+        "made": m["made_utc"][:10],
+        "code_version": m.get("code_version"),
+        "data_up_to": m.get("data_up_to"),
+    }
+
+
 @router.get("/health")
 def health(request: Request) -> dict:
-    """Is the warehouse there, and how much is in it?"""
+    """Is the warehouse there, how much is in it, and how fresh is it? The data is a fixed
+    snapshot, not a live feed: latest_date is its last session, snapshot says when it was packed."""
     s = request.app.state.settings
     found = rows(
         request,
         """
         SELECT count(*) AS sessions, max(season) AS latest,
-            arg_max(event_name, session_date_utc) AS latest_event
+            arg_max(event_name, session_date_utc) AS latest_event,
+            strftime(max(session_date_utc), '%Y-%m-%d') AS latest_date
         FROM core_sessions
         """,
     )
-    return {"status": "ok", "team": s.team_name, "mode": s.mode, **found[0]}
+    return {
+        "status": "ok",
+        "team": s.team_name,
+        "mode": s.mode,
+        **found[0],
+        "snapshot": snapshot_info(),
+    }
 
 
 @router.get("/settings")
