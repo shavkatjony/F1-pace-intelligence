@@ -1,6 +1,6 @@
 # Model card · DPEC race pace forecaster
 
-Updated: 2026-10-24 · Decisions 0011, 0012, 0013
+Updated: 2026-11-08 · Decisions 0011, 0012, 0013
 
 ## What it forecasts
 Each car's race pace in a dry Grand Prix: the median clean race lap, in % behind the fastest
@@ -31,7 +31,10 @@ Ranges: the 80th percentile of the size of its errors over the last 10 forecast 
 | best simple guess       | 0.674% team form | 0.589% per-year   |
 | order (median Spearman) | 0.767            | 0.821             |
 | inside the 80% range    | 78.5%            | 79.9%             |
-| top-3 chance, Brier (all years) | 0.084 (none: 0.132) | 0.077 (none: 0.132) |
+| top-3 chance, Brier (lower is better) | 0.080 (none: 0.129) | 0.070 (none: 0.129) |
+
+Over all forecast years (2023–26, 78 weekends) the shared model's error is 0.556% after practice and
+0.498% after qualifying, and the top-3 Brier 0.084 and 0.077 (none: 0.131).
 
 ## Which inputs matter (all years, error after practice / after qualifying)
 Full 0.556 / 0.498 · without team form 0.871 / 0.593 · without the quali gap – / 0.557 ·

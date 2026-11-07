@@ -29,10 +29,16 @@
   가장 좋은 베이스라인(0.589%)보다 정확
 - 80% 예측 구간 안에 실제 결과의 79.9%가 포함 (불확실성을 정직하게 표현)
 - 드라이 레이스 78개 재현에서 스톱 횟수 판단 일치율 58% ("항상 1스톱"은 46%)
-- AI 시험: Claude 통과율 <overall>%, 공개되지 않은 정보(연료, 세팅 등)에 대한 질문 <traps>/5 거절
+- AI 시험(2026년 11월 8일): Claude 50문항 모두 통과, 공개되지 않은 정보(연료, 세팅 등)를
+  묻는 함정 질문 5/5 거절, 1회 실행 비용 $1.53
 
-**링크:** 라이브 앱 https://f1-pace-intelligence.onrender.com ·
+**데이터 기준:** 2026 싱가포르 그랑프리(10월 11일)까지의 데이터입니다. 온라인 데모는 날짜가 표시된
+데이터 스냅샷이며, 실시간 데이터가 아닙니다.
+
+**링크:** 온라인 데모(읽기 전용) https://f1-pace-intelligence.onrender.com ·
 코드 https://github.com/shavkatjony/F1-pace-intelligence
+
+**만든 사람:** Shavkatjon Yuldashev · Data Scientist / ML Engineer (엔드투엔드 데이터 제품)
 
 ## AI 레이스 엔지니어는 어떻게 동작하나요?
 
