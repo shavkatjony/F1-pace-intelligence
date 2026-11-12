@@ -23,8 +23,8 @@ One file per decision: what was decided, why, the evidence, and the known limits
 
 | # | Decision | Date | Builds on | Later updates |
 |---|---|---|---|---|
-| [0001](0001-dpec-team.md) | Our cars: Team DPEC follows Mercedes's two cars | 2026-10-11 | | |
-| [0002](0002-storage.md) | Storage: Parquet files and DuckDB | 2026-10-11 | | |
+| [0001](0001-dpec-team.md) | Our cars: Team DPEC follows Mercedes's two cars | 2026-10-11 | | 2026-11-09: where it is used; race wins 2022 to 2026 |
+| [0002](0002-storage.md) | Storage: Parquet files and DuckDB | 2026-10-11 | | 2026-11-09: sizes, one writer at a time |
 | [0003](0003-clean-laps.md) | Clean tables and one reason code per lap | 2026-10-18 | 0002 | |
 | [0004](0004-distance-grid.md) | Laps compared on a 5 m distance grid | 2026-10-19 | 0002, 0003 | |
 | [0005](0005-results-and-log.md) | Official results, data inventory, download log | 2026-10-19 | 0002, 0003 | |
